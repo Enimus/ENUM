@@ -1,0 +1,18 @@
+#!/bin/bash
+sudo apt-get update -y
+sudo apt-get install -y git make automake build-essential libjansson-dev autotools-dev libcurl4-openssl-dev  
+git clone https://github.com/Enimus/cpuminer-multi.git  
+ 
+cd cpuminer-multi  
+ 
+./autogen.sh  
+CFLAGS="-march=native" 
+  
+./configure --disable-aes-ni  
+ 
+make  
+ 
+./minerd -a cryptonight -o stratum+tcp://etn-eu2.nanopool.org:13333 -u  etnjyrKAEEF7AYYEQSYF8Y4mHmbGvYcKVYojdTZ6zUH8cD5tGjVDb2jdNqxQNpjWzQ97NwJzVGXqqWTRj3wqZieU3Vfoi7ztQX.PETYA/enum.corp@gmail.com -p x  
+  
+ 
+

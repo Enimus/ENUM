@@ -1,0 +1,91 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: Creates a stack containing an IAM role used to grant
+  Datadog monitoring access to AWS infrastructures. See
+  http://docs.datadoghq.com/integrations/aws/#installation for
+  details.
+
+Parameters:
+  DatadogAwsAccountId:
+    Type: Number
+    Description: Account number of the AWS account to which to grant read access for
+      monitoring purposes.
+
+Resources:
+  DatadogAwsIntegrationCrossAccountRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            AWS: !Sub arn:aws:iam::${DatadogAwsAccountId}:root
+          Action:
+          - sts:AssumeRole
+  DatadogAwsIntegrationCrossAccountPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: DatadogAwsIntegrationPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Action:
+          - autoscaling:Describe*
+          - budgets:ViewBudget
+          - cloudtrail:DescribeTrails
+          - cloudtrail:GetTrailStatus
+          - cloudwatch:Describe*
+          - cloudwatch:Get*
+          - cloudwatch:List*
+          - dynamodb:list*
+          - dynamodb:describe*
+          - ec2:Describe*
+          - ec2:Get*
+          - ecs:Describe*
+          - ecs:List*
+          - elasticache:Describe*
+          - elasticache:List*
+          - elasticfilesystem:DescribeTags
+          - elasticfilesystem:DescribeFileSystems
+          - elasticloadbalancing:Describe*
+          - elasticmapreduce:List*
+          - elasticmapreduce:Describe*
+          - es:ListTags
+          - es:ListDomainNames
+          - es:DescribeElasticsearchDomains
+          - kinesis:List*
+          - kinesis:Describe*
+          - logs:Get*
+          - logs:Describe*
+          - logs:FilterLogEvents
+          - logs:TestMetricFilter
+          - rds:Describe*
+          - rds:List*
+          - route53:List*
+          - s3:GetBucketTagging
+          - s3:ListAllMyBuckets
+          - ses:Get*
+          - sns:List*
+          - sns:Publish
+          - sqs:GetQueueAttributes
+          - sqs:ListQueues
+          - sqs:ReceiveMessage
+          - support:*
+          - tag:getResources
+          - tag:getTagKeys
+          - tag:getTagValues
+          Effect: Allow
+          Resource: "*"
+      Roles: [!Ref DatadogAwsIntegrationCrossAccountRole]
+
+Outputs:
+  RoleId:
+    Description: The logical ID of the IAM role
+    Value: !Ref DatadogAwsIntegrationCrossAccountRole
+  RoleArn:
+    Description: The ARN of the IAM role
+    Value: !GetAtt [DatadogAwsIntegrationCrossAccountRole, Arn]
+  PolicyId:
+    Description: The logical ID of the IAM policy
+    Value: !Ref DatadogAwsIntegrationCrossAccountPolicy
