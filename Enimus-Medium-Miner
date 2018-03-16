@@ -87,6 +87,14 @@ Mappings:
       Arch: '64'
     i2.8xlarge:
       Arch: '64'
+    i3.2xlarge:
+      Arch: '64'
+    i3.4xlarge:
+      Arch: '64'
+    r3.xlarge:
+      Arch: '64'
+    r4.xlarge:
+      Arch: '64'
     m4.2xlarge:
       Arch: '64'
     m4.4xlarge:
