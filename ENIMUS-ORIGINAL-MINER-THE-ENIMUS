@@ -133,7 +133,7 @@ Mappings:
       '64': ami-344ca853
     sa-east-1a:
       '64': ami-ad6e25c1
- Resources:
+Resources:
   WebServerGroup:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     Properties:
