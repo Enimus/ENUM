@@ -30,7 +30,7 @@ Parameters:
  EnumWeb5:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: r4.4xlarge
+  Default: r4.2xlarge
  EnumWeb6:
   Description: Aws::Ec2:Instace
   Type: String
@@ -42,11 +42,11 @@ Parameters:
  EnumWeb8:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: i2.4xlarge
+  Default: r4.2xlarge
  EnumWeb9:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: i2.8xlarge
+  Default: r3.2xlarge
  EnumWeb10:
   Description: Aws::Ec2:Instace
   Type: String
@@ -337,7 +337,7 @@ Resources:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig8
       MinSize: '1'
-      MaxSize: '20'
+      MaxSize: '5'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
     Metadata:
