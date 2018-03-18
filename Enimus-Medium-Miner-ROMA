@@ -18,7 +18,7 @@ Parameters:
  EnumWeb2:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: r3.4xlarge
+  Default: r3.xlarge
  EnumWeb3:
   Description: Aws::Ec2:Instace
   Type: String
@@ -26,15 +26,15 @@ Parameters:
  EnumWeb4:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: r3.8xlarge
+  Default: r3.2xlarge
  EnumWeb5:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: r4.2xlarge
+  Default: r3.2xlarge
  EnumWeb6:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: r4.8xlarge
+  Default: m4.2xlarge
  EnumWeb7:
   Description: Aws::Ec2:Instace
   Type: String
@@ -42,15 +42,15 @@ Parameters:
  EnumWeb8:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: r4.2xlarge
+  Default: m4.4xlarge
  EnumWeb9:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: r3.2xlarge
+  Default: m5.2xlarge
  EnumWeb10:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: m4.2xlarge
+  Default: m5.4xlarge
  WebServerPort:
    Description: TCP/IP port of the web server.
    Type: Number
@@ -73,27 +73,29 @@ Mappings:
       Arch: '64'
     r3.4xlarge:
       Arch: '64'
-    r3.8xlarge:
+    r4.xlarge:
+      Arch: '64'
+    r3.xlarge:
       Arch: '64'
     r4.2xlarge:
       Arch: '64'
-    r4.4xlarge:
+    m4.4xlarge:
       Arch: '64'
-    r4.8xlarge:
+    m4.2xlarge:
       Arch: '64'
     i2.2xlarge:
       Arch: '64'
-    i2.4xlarge:
+    i2.2xlarge:
       Arch: '64'
     i2.8xlarge:
       Arch: '64'
     i3.2xlarge:
       Arch: '64'
-    i3.4xlarge:
+    m5.4xlarge:
       Arch: '64'
-    r3.xlarge:
+    m5.2xlarge:
       Arch: '64'
-    r4.xlarge:
+    m5.xlarge:
       Arch: '64'
     m4.2xlarge:
       Arch: '64'
