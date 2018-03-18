@@ -18,7 +18,7 @@ Parameters:
  EnumWeb2:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: r3.xlarge
+  Default: r3.4xlarge
  EnumWeb3:
   Description: Aws::Ec2:Instace
   Type: String
@@ -26,15 +26,15 @@ Parameters:
  EnumWeb4:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: r3.2xlarge
+  Default: r3.8xlarge
  EnumWeb5:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: r3.2xlarge
+  Default: i3.2xlarge
  EnumWeb6:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: m4.2xlarge
+  Default: r4.8xlarge
  EnumWeb7:
   Description: Aws::Ec2:Instace
   Type: String
@@ -42,15 +42,15 @@ Parameters:
  EnumWeb8:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: m4.4xlarge
+  Default: m4.2xlarge
  EnumWeb9:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: m5.2xlarge
+  Default: r3.2xlarge
  EnumWeb10:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: m5.4xlarge
+  Default: m5.2xlarge
  WebServerPort:
    Description: TCP/IP port of the web server.
    Type: Number
@@ -73,29 +73,27 @@ Mappings:
       Arch: '64'
     r3.4xlarge:
       Arch: '64'
-    r4.xlarge:
-      Arch: '64'
-    r3.xlarge:
+    r3.8xlarge:
       Arch: '64'
     r4.2xlarge:
       Arch: '64'
-    m4.4xlarge:
+    r4.4xlarge:
       Arch: '64'
-    m4.2xlarge:
-      Arch: '64'
-    i2.2xlarge:
+    r4.8xlarge:
       Arch: '64'
     i2.2xlarge:
+      Arch: '64'
+    i2.4xlarge:
       Arch: '64'
     i2.8xlarge:
       Arch: '64'
     i3.2xlarge:
       Arch: '64'
-    m5.4xlarge:
+    i3.4xlarge:
       Arch: '64'
-    m5.2xlarge:
+    r3.xlarge:
       Arch: '64'
-    m5.xlarge:
+    r4.xlarge:
       Arch: '64'
     m4.2xlarge:
       Arch: '64'
@@ -169,7 +167,7 @@ Resources:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig2
       MinSize: '1'
-      MaxSize: '1'
+      MaxSize: '5'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
     Metadata:
@@ -225,7 +223,7 @@ Resources:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig4
       MinSize: '1'
-      MaxSize: '1'
+      MaxSize: '5'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
     Metadata:
@@ -253,7 +251,7 @@ Resources:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig5
       MinSize: '1'
-      MaxSize: '1'
+      MaxSize: '5'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
     Metadata:
@@ -281,7 +279,7 @@ Resources:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig6
       MinSize: '1'
-      MaxSize: '1'
+      MaxSize: '5'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
     Metadata:
@@ -365,7 +363,7 @@ Resources:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig9
       MinSize: '1'
-      MaxSize: '1'
+      MaxSize: '5'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
     Metadata:
@@ -393,7 +391,7 @@ Resources:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig10
       MinSize: '1'
-      MaxSize: '1'
+      MaxSize: '5'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
     Metadata:
@@ -446,7 +444,7 @@ Resources:
       Namespace: AWS/EC2
       Statistic: Average
       Period: '300'
-      EvaluationPeriods: '2'
+      EvaluationPeriods: '1'
       Threshold: '70'
       AlarmActions:
         - !Ref WebServer2ScaleUpPolic4
@@ -465,7 +463,7 @@ Resources:
       Namespace: AWS/EC2
       Statistic: Average
       Period: '300'
-      EvaluationPeriods: '2'
+      EvaluationPeriods: '3'
       Threshold: '70'
       AlarmActions:
         - !Ref WebServer2ScaleDownPolicy
@@ -504,7 +502,7 @@ Resources:
       Namespace: AWS/EC2
       Statistic: Average
       Period: '300'
-      EvaluationPeriods: '3'
+      EvaluationPeriods: '1'
       Threshold: '70'
       AlarmActions:
         - !Ref WebServer3ScaleUpPolicy
@@ -562,7 +560,7 @@ Resources:
       Namespace: AWS/EC2
       Statistic: Average
       Period: '300'
-      EvaluationPeriods: '2'
+      EvaluationPeriods: '1'
       Threshold: '70'
       AlarmActions:
         - !Ref WebServer4ScaleUpPolicy
@@ -620,7 +618,7 @@ Resources:
       Namespace: AWS/EC2
       Statistic: Average
       Period: '300'
-      EvaluationPeriods: '5'
+      EvaluationPeriods: '2'
       Threshold: '70'
       AlarmActions:
         - !Ref WebServer5ScaleUpPolicy
@@ -678,7 +676,7 @@ Resources:
       Namespace: AWS/EC2
       Statistic: Average
       Period: '300'
-      EvaluationPeriods: '6'
+      EvaluationPeriods: '1'
       Threshold: '70'
       AlarmActions:
         - !Ref WebServer6ScaleUpPolicy
@@ -736,7 +734,7 @@ Resources:
       Namespace: AWS/EC2
       Statistic: Average
       Period: '300'
-      EvaluationPeriods: '6'
+      EvaluationPeriods: '1'
       Threshold: '70'
       AlarmActions:
         - !Ref WebServer7ScaleUpPolicy
@@ -794,7 +792,7 @@ Resources:
       Namespace: AWS/EC2
       Statistic: Average
       Period: '300'
-      EvaluationPeriods: '6'
+      EvaluationPeriods: '2'
       Threshold: '70'
       AlarmActions:
         - !Ref WebServer8ScaleUpPolicy
@@ -852,7 +850,7 @@ Resources:
       Namespace: AWS/EC2
       Statistic: Average
       Period: '300'
-      EvaluationPeriods: '6'
+      EvaluationPeriods: '2'
       Threshold: '70'
       AlarmActions:
         - !Ref WebServer9ScaleUpPolicy
@@ -872,7 +870,7 @@ Resources:
       Statistic: Average
       Period: '300'
       EvaluationPeriods: '2'
-      Threshold: '70'
+      Threshold: '40'
       AlarmActions:
         - !Ref WebServer9ScaleDownPolicy
       Dimensions:
@@ -910,7 +908,7 @@ Resources:
       Namespace: AWS/EC2
       Statistic: Average
       Period: '300'
-      EvaluationPeriods: '6'
+      EvaluationPeriods: '1'
       Threshold: '70'
       AlarmActions:
         - !Ref WebServer10ScaleUpPolicy
@@ -929,7 +927,7 @@ Resources:
       Namespace: AWS/EC2
       Statistic: Average
       Period: '300'
-      EvaluationPeriods: '2'
+      EvaluationPeriods: '5'
       Threshold: '70'
       AlarmActions:
         - !Ref WebServer10ScaleDownPolicy
@@ -955,9 +953,9 @@ Resources:
             - !Ref WebServerPort
             - /
         HealthyThreshold: '3'
-        UnhealthyThreshold: '5'
+        UnhealthyThreshold: '10'
         Interval: '30'
-        Timeout: '5'
+        Timeout: '1'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: e613c62c-df26-40b9-b969-f7274589438d
