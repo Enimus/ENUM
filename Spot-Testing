@@ -1,0 +1,26 @@
+ us-east-1:
+      '64': ami-0a29159a2836226ac
+    us-east-2:
+      '64': ami-031a4406bc140c17a
+    us-west-1:
+      '64': ami-0bf2ec4eb3efcff66
+    us-west-2:
+      '64': ami-0cfcb3ca4e288d43e
+    ca-central-1:
+      '64': ami-0c5541a5eff1ae777
+    eu-west-1:
+      '64': ami-0a5e337284856aa7c
+    eu-west-2:
+      '64': ami-0f29dcd3bd0b0937a
+    eu-central-1:
+      '64': ami-0150e2d7f9907d25a
+    ap-southeast-2:
+      '64': ami-03d0eb96e30a936af
+    ap-northeast-1:
+      '64': ami-0c18b713d365c09e2
+    ap-northeast-2:
+      '64': ami-0955bcf5e3052682e
+    ap-southeast-1:
+      '64': ami-0ac40bb10699dfc91
+    sa-east-1:
+      '64': ami-024b4b70efe1c7a1c
