@@ -161,7 +161,7 @@ Resources:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig2
       MinSize: '1'
-      MaxSize: '2'
+      MaxSize: '1'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
     Metadata:
@@ -189,7 +189,7 @@ Resources:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig3
       MinSize: '1'
-      MaxSize: '1'
+      MaxSize: '5'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
     Metadata:
@@ -385,7 +385,7 @@ Resources:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig10
       MinSize: '1'
-      MaxSize: '3'
+      MaxSize: '1'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
     Metadata:
