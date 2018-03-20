@@ -38,7 +38,7 @@ Parameters:
  EnumWeb7:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: m3.2xlarge
+  Default: m5.2xlarge
  EnumWeb8:
   Description: Aws::Ec2:Instace
   Type: String
@@ -46,7 +46,7 @@ Parameters:
  EnumWeb9:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: m3.4xlarge
+  Default: m4.2xlarge
  EnumWeb10:
   Description: Aws::Ec2:Instace
   Type: String
@@ -106,8 +106,6 @@ Mappings:
     m5.2xlarge:
       Arch: '64'
     m5.4xlarge:
-      Arch: '64'
-    m3.2xlarge:
       Arch: '64'
     m3.4xlarge:
       Arch: '64'
