@@ -961,7 +961,7 @@ Resources:
         HealthyThreshold: '3'
         UnhealthyThreshold: '10'
         Interval: '30'
-        Timeout: '1'
+        Timeout: '2'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: e613c62c-df26-40b9-b969-f7274589438d
