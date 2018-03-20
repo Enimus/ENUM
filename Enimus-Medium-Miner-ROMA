@@ -38,7 +38,7 @@ Parameters:
  EnumWeb7:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: i2.2xlarge
+  Default: m3.2xlarge
  EnumWeb8:
   Description: Aws::Ec2:Instace
   Type: String
@@ -46,7 +46,7 @@ Parameters:
  EnumWeb9:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: r3.2xlarge
+  Default: m3.4xlarge
  EnumWeb10:
   Description: Aws::Ec2:Instace
   Type: String
@@ -104,6 +104,12 @@ Mappings:
     m4.16xlarge:
       Arch: '64'
     m5.2xlarge:
+      Arch: '64'
+    m5.4xlarge:
+      Arch: '64'
+    m3.2xlarge:
+      Arch: '64'
+    m3.4xlarge:
       Arch: '64'
   AWSRegionArch2AMI:
     us-east-1:
@@ -422,7 +428,7 @@ Resources:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup2
       Cooldown: '60'
-      ScalingAdjustment: '1'
+      ScalingAdjustment: '2'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
@@ -432,7 +438,7 @@ Resources:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup2
       Cooldown: '60'
-      ScalingAdjustment: '-1'
+      ScalingAdjustment: '1'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 71e8c4ab-c777-43f2-93eb-741d2987421a
@@ -443,14 +449,14 @@ Resources:
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '1'
+      Period: '60'
+      EvaluationPeriods: '2'
       Threshold: '70'
       AlarmActions:
         - !Ref WebServer2ScaleUpPolic4
       Dimensions:
         - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup2
+          Value: !Ref WebServerGroup
       ComparisonOperator: GreaterThanThreshold
     Metadata:
       'AWS::CloudFormation::Designer':
@@ -458,11 +464,11 @@ Resources:
   CPUAlarmLow:
     Type: 'AWS::CloudWatch::Alarm'
     Properties:
-      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
+      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
-      Period: '300'
+      Period: '60'
       EvaluationPeriods: '3'
       Threshold: '70'
       AlarmActions:
@@ -490,7 +496,7 @@ Resources:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup3
       Cooldown: '60'
-      ScalingAdjustment: '-1'
+      ScalingAdjustment: '1'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 71e8c4ab-c777-43f2-93eb-741d2987421a
@@ -502,7 +508,7 @@ Resources:
       Namespace: AWS/EC2
       Statistic: Average
       Period: '300'
-      EvaluationPeriods: '1'
+      EvaluationPeriods: '3'
       Threshold: '70'
       AlarmActions:
         - !Ref WebServer3ScaleUpPolicy
@@ -516,7 +522,7 @@ Resources:
   CPUAlarmLow:
     Type: 'AWS::CloudWatch::Alarm'
     Properties:
-      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
+      AlarmDescription: Scale-down if CPU > 70% for 10 minutes
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
@@ -538,7 +544,7 @@ Resources:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup4
       Cooldown: '60'
-      ScalingAdjustment: '1'
+      ScalingAdjustment: '2'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
@@ -548,7 +554,7 @@ Resources:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup4
       Cooldown: '60'
-      ScalingAdjustment: '-1'
+      ScalingAdjustment: '2'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 71e8c4ab-c777-43f2-93eb-741d2987421a
@@ -559,7 +565,7 @@ Resources:
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
-      Period: '300'
+      Period: '60'
       EvaluationPeriods: '1'
       Threshold: '70'
       AlarmActions:
@@ -574,12 +580,12 @@ Resources:
   CPUAlarmLow:
     Type: 'AWS::CloudWatch::Alarm'
     Properties:
-      AlarmDescription: Scale-down if CPU < 40% for 10 minutes
+      AlarmDescription: Scale-down if CPU > 40% for 10 minutes
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '2'
+      Period: '60'
+      EvaluationPeriods: '1'
       Threshold: '40'
       AlarmActions:
         - !Ref WebServer4ScaleDownPolicy
@@ -596,7 +602,7 @@ Resources:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup5
       Cooldown: '60'
-      ScalingAdjustment: '1'
+      ScalingAdjustment: '3'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
@@ -606,7 +612,7 @@ Resources:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup5
       Cooldown: '60'
-      ScalingAdjustment: '-1'
+      ScalingAdjustment: '3'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 71e8c4ab-c777-43f2-93eb-741d2987421a
@@ -617,8 +623,8 @@ Resources:
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '2'
+      Period: '30'
+      EvaluationPeriods: '1'
       Threshold: '70'
       AlarmActions:
         - !Ref WebServer5ScaleUpPolicy
@@ -632,12 +638,12 @@ Resources:
   CPUAlarmLow:
     Type: 'AWS::CloudWatch::Alarm'
     Properties:
-      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
+      AlarmDescription: Scale-down if CPU > 70% for 10 minutes
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '2'
+      Period: '60'
+      EvaluationPeriods: '1'
       Threshold: '70'
       AlarmActions:
         - !Ref WebServer5ScaleDownPolicy
@@ -654,7 +660,7 @@ Resources:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup6
       Cooldown: '60'
-      ScalingAdjustment: '1'
+      ScalingAdjustment: '3'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
@@ -664,7 +670,7 @@ Resources:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup6
       Cooldown: '60'
-      ScalingAdjustment: '-1'
+      ScalingAdjustment: '3'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 71e8c4ab-c777-43f2-93eb-741d2987421a
@@ -675,7 +681,7 @@ Resources:
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
-      Period: '300'
+      Period: '60'
       EvaluationPeriods: '1'
       Threshold: '70'
       AlarmActions:
@@ -690,12 +696,12 @@ Resources:
   CPUAlarmLow:
     Type: 'AWS::CloudWatch::Alarm'
     Properties:
-      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
+      AlarmDescription: Scale-down if CPU > 70% for 10 minutes
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '2'
+      Period: '60'
+      EvaluationPeriods: '1'
       Threshold: '70'
       AlarmActions:
         - !Ref WebServer6ScaleDownPolicy
@@ -712,7 +718,7 @@ Resources:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup7
       Cooldown: '60'
-      ScalingAdjustment: '1'
+      ScalingAdjustment: '3'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
@@ -722,7 +728,7 @@ Resources:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup7
       Cooldown: '60'
-      ScalingAdjustment: '-1'
+      ScalingAdjustment: '1'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 71e8c4ab-c777-43f2-93eb-741d2987421a
@@ -752,8 +758,8 @@ Resources:
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '2'
+      Period: '30'
+      EvaluationPeriods: '1'
       Threshold: '70'
       AlarmActions:
         - !Ref WebServer7ScaleDownPolicy
@@ -770,7 +776,7 @@ Resources:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup8
       Cooldown: '60'
-      ScalingAdjustment: '1'
+      ScalingAdjustment: '3'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
@@ -780,7 +786,7 @@ Resources:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup8
       Cooldown: '60'
-      ScalingAdjustment: '-1'
+      ScalingAdjustment: '1'
     Metadata:
       'AWS::CloudFormation::Designer':
         id:81e8c4ab-c777-43f2-93eb-741d2987421a
@@ -791,8 +797,8 @@ Resources:
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '2'
+      Period: '30'
+      EvaluationPeriods: '1'
       Threshold: '70'
       AlarmActions:
         - !Ref WebServer8ScaleUpPolicy
@@ -806,12 +812,12 @@ Resources:
   CPUAlarmLow:
     Type: 'AWS::CloudWatch::Alarm'
     Properties:
-      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
+      AlarmDescription: Scale-down if CPU > 70% for 10 minutes
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '2'
+      Period: '30'
+      EvaluationPeriods: '1'
       Threshold: '70'
       AlarmActions:
         - !Ref WebServer8ScaleDownPolicy
@@ -828,7 +834,7 @@ Resources:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup9
       Cooldown: '60'
-      ScalingAdjustment: '1'
+      ScalingAdjustment: '2'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
@@ -838,7 +844,7 @@ Resources:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup9
       Cooldown: '60'
-      ScalingAdjustment: '-1'
+      ScalingAdjustment: '1'
     Metadata:
       'AWS::CloudFormation::Designer':
         id:81e8c4ab-c777-43f2-93eb-741d2987421a
@@ -864,13 +870,13 @@ Resources:
   CPUAlarmLow:
     Type: 'AWS::CloudWatch::Alarm'
     Properties:
-      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
+      AlarmDescription: Scale-down if CPU > 70% for 10 minutes
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
       Period: '300'
       EvaluationPeriods: '2'
-      Threshold: '40'
+      Threshold: '70'
       AlarmActions:
         - !Ref WebServer9ScaleDownPolicy
       Dimensions:
@@ -886,7 +892,7 @@ Resources:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup10
       Cooldown: '60'
-      ScalingAdjustment: '1'
+      ScalingAdjustment: '2'
     Metadata:
       'AWS::CloudFormation::Designer':
         id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
@@ -896,7 +902,7 @@ Resources:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup10
       Cooldown: '60'
-      ScalingAdjustment: '-1'
+      ScalingAdjustment: '1'
     Metadata:
       'AWS::CloudFormation::Designer':
         id:81e8c4ab-c777-43f2-93eb-741d2987421a
@@ -927,7 +933,7 @@ Resources:
       Namespace: AWS/EC2
       Statistic: Average
       Period: '300'
-      EvaluationPeriods: '5'
+      EvaluationPeriods: '1'
       Threshold: '70'
       AlarmActions:
         - !Ref WebServer10ScaleDownPolicy
