@@ -14,7 +14,7 @@ Parameters:
  EnumWeb1:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: m5.xlarge
+  Default: m5.4xlarge
  EnumWeb2:
   Description: Aws::Ec2:Instace
   Type: String
@@ -22,11 +22,11 @@ Parameters:
  EnumWeb3:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: r4.2xlarge
+  Default: r4.4xlarge
  EnumWeb4:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: m4.xlarge
+  Default: m4.4xlarge
  EnumWeb5:
   Description: Aws::Ec2:Instace
   Type: String
@@ -46,11 +46,11 @@ Parameters:
  EnumWeb9:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: m4.2xlarge
+  Default: r4.4xlarge
  EnumWeb10:
   Description: Aws::Ec2:Instace
   Type: String
-  Default: m5.2xlarge
+  Default: r3.8xlarge
  WebServerPort:
    Description: TCP/IP port of the web server.
    Type: Number
@@ -130,6 +130,8 @@ Mappings:
       '64': ami-0f29dcd3bd0b0937a
     eu-central-1:
       '64': ami-0150e2d7f9907d25a
+    ap-south-1:
+      '64': ami-04b8811f37754a184
     ap-southeast-2:
       '64': ami-03d0eb96e30a936af
     ap-northeast-1:
@@ -146,8 +148,8 @@ Resources:
     Properties:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig
-      MinSize: '5'
-      MaxSize: '5'
+      MinSize: '0'
+      MaxSize: '10'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
     Metadata:
@@ -174,8 +176,8 @@ Resources:
     Properties:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig2
-      MinSize: '1'
-      MaxSize: '1'
+      MinSize: '0'
+      MaxSize: '10'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
     Metadata:
@@ -202,8 +204,8 @@ Resources:
     Properties:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig3
-      MinSize: '1'
-      MaxSize: '1'
+      MinSize: '0'
+      MaxSize: '10'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
     Metadata:
@@ -230,8 +232,8 @@ Resources:
     Properties:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig4
-      MinSize: '1'
-      MaxSize: '5'
+      MinSize: '0'
+      MaxSize: '10'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
     Metadata:
@@ -258,8 +260,8 @@ Resources:
     Properties:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig5
-      MinSize: '1'
-      MaxSize: '1'
+      MinSize: '0'
+      MaxSize: '10'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
     Metadata:
@@ -286,8 +288,8 @@ Resources:
     Properties:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig6
-      MinSize: '1'
-      MaxSize: '1'
+      MinSize: '0'
+      MaxSize: '10'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
     Metadata:
@@ -314,8 +316,8 @@ Resources:
     Properties:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig7
-      MinSize: '3'
-      MaxSize: '3'
+      MinSize: '0'
+      MaxSize: '10'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
     Metadata:
@@ -342,8 +344,8 @@ Resources:
     Properties:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig8
-      MinSize: '1'
-      MaxSize: '1'
+      MinSize: '0'
+      MaxSize: '10'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
     Metadata:
@@ -370,8 +372,8 @@ Resources:
     Properties:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig9
-      MinSize: '3'
-      MaxSize: '3'
+      MinSize: '0'
+      MaxSize: '10'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
     Metadata:
@@ -398,8 +400,8 @@ Resources:
     Properties:
       AvailabilityZones: !GetAZs ''
       LaunchConfigurationName: !Ref LaunchConfig10
-      MinSize: '3'
-      MaxSize: '3'
+      MinSize: '0'
+      MaxSize: '10'
       LoadBalancerNames:
         - !Ref ElasticLoadBalancer
     Metadata:
@@ -429,7 +431,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup2
-      Cooldown: '60'
+      Cooldown: '300'
       ScalingAdjustment: '2'
     Metadata:
       'AWS::CloudFormation::Designer':
@@ -439,7 +441,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup2
-      Cooldown: '60'
+      Cooldown: '300'
       ScalingAdjustment: '1'
     Metadata:
       'AWS::CloudFormation::Designer':
@@ -487,7 +489,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup3
-      Cooldown: '60'
+      Cooldown: '300'
       ScalingAdjustment: '1'
     Metadata:
       'AWS::CloudFormation::Designer':
@@ -497,7 +499,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup3
-      Cooldown: '60'
+      Cooldown: '300'
       ScalingAdjustment: '1'
     Metadata:
       'AWS::CloudFormation::Designer':
@@ -509,7 +511,7 @@ Resources:
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
-      Period: '300'
+      Period: '60'
       EvaluationPeriods: '3'
       Threshold: '70'
       AlarmActions:
@@ -528,7 +530,7 @@ Resources:
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
-      Period: '300'
+      Period: '60'
       EvaluationPeriods: '2'
       Threshold: '70'
       AlarmActions:
@@ -545,7 +547,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup4
-      Cooldown: '60'
+      Cooldown: '300'
       ScalingAdjustment: '2'
     Metadata:
       'AWS::CloudFormation::Designer':
@@ -555,7 +557,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup4
-      Cooldown: '60'
+      Cooldown: '300'
       ScalingAdjustment: '2'
     Metadata:
       'AWS::CloudFormation::Designer':
@@ -603,7 +605,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup5
-      Cooldown: '60'
+      Cooldown: '300'
       ScalingAdjustment: '3'
     Metadata:
       'AWS::CloudFormation::Designer':
@@ -613,7 +615,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup5
-      Cooldown: '60'
+      Cooldown: '300'
       ScalingAdjustment: '3'
     Metadata:
       'AWS::CloudFormation::Designer':
@@ -625,7 +627,7 @@ Resources:
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
-      Period: '30'
+      Period: '60'
       EvaluationPeriods: '1'
       Threshold: '70'
       AlarmActions:
@@ -661,7 +663,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup6
-      Cooldown: '60'
+      Cooldown: '300'
       ScalingAdjustment: '3'
     Metadata:
       'AWS::CloudFormation::Designer':
@@ -671,7 +673,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup6
-      Cooldown: '60'
+      Cooldown: '300'
       ScalingAdjustment: '3'
     Metadata:
       'AWS::CloudFormation::Designer':
@@ -719,7 +721,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup7
-      Cooldown: '60'
+      Cooldown: '300'
       ScalingAdjustment: '3'
     Metadata:
       'AWS::CloudFormation::Designer':
@@ -729,7 +731,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup7
-      Cooldown: '60'
+      Cooldown: '300'
       ScalingAdjustment: '1'
     Metadata:
       'AWS::CloudFormation::Designer':
@@ -760,7 +762,7 @@ Resources:
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
-      Period: '30'
+      Period: '300'
       EvaluationPeriods: '1'
       Threshold: '70'
       AlarmActions:
@@ -777,7 +779,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup8
-      Cooldown: '60'
+      Cooldown: '300'
       ScalingAdjustment: '3'
     Metadata:
       'AWS::CloudFormation::Designer':
@@ -787,7 +789,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup8
-      Cooldown: '60'
+      Cooldown: '300'
       ScalingAdjustment: '1'
     Metadata:
       'AWS::CloudFormation::Designer':
@@ -799,7 +801,7 @@ Resources:
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
-      Period: '30'
+      Period: '300'
       EvaluationPeriods: '1'
       Threshold: '70'
       AlarmActions:
@@ -818,7 +820,7 @@ Resources:
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       Statistic: Average
-      Period: '30'
+      Period: '300'
       EvaluationPeriods: '1'
       Threshold: '70'
       AlarmActions:
@@ -835,7 +837,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup9
-      Cooldown: '60'
+      Cooldown: '300'
       ScalingAdjustment: '2'
     Metadata:
       'AWS::CloudFormation::Designer':
@@ -845,7 +847,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup9
-      Cooldown: '60'
+      Cooldown: '300'
       ScalingAdjustment: '1'
     Metadata:
       'AWS::CloudFormation::Designer':
@@ -893,7 +895,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup10
-      Cooldown: '60'
+      Cooldown: '300'
       ScalingAdjustment: '2'
     Metadata:
       'AWS::CloudFormation::Designer':
@@ -903,7 +905,7 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref WebServerGroup10
-      Cooldown: '60'
+      Cooldown: '300'
       ScalingAdjustment: '1'
     Metadata:
       'AWS::CloudFormation::Designer':
