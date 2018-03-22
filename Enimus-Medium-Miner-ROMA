@@ -1,1085 +1,2850 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
-  AWS CloudFormation Sample Template AutoScalingMultiAZSample: Create a
-  multi-az, load balanced and Auto Scaled sample web site running on an Apache
-  Web Server with PHP. The application is configured to span all Availability
-  Zones in the region and is Auto-Scaled based on the CPU utilization of the web
-  servers. The instances are load balanced with a simple health check against
-  the default web page. The web site is available on port 80, however, the
-  instances can be configured to listen on any port (8888 by default).
-  **WARNING** This template creates one or more Amazon EC2 instances and an
-  Elastic Load Balancer. You will be billed for the AWS resources used if you
-  create a stack from this template.
-Parameters:
- EnumWeb1:
-  Description: Aws::Ec2:Instace
-  Type: String
-  Default: m5.4xlarge
- EnumWeb2:
-  Description: Aws::Ec2:Instace
-  Type: String
-  Default: r3.4xlarge
- EnumWeb3:
-  Description: Aws::Ec2:Instace
-  Type: String
-  Default: r4.4xlarge
- EnumWeb4:
-  Description: Aws::Ec2:Instace
-  Type: String
-  Default: m4.4xlarge
- EnumWeb5:
-  Description: Aws::Ec2:Instace
-  Type: String
-  Default: i3.2xlarge
- EnumWeb6:
-  Description: Aws::Ec2:Instace
-  Type: String
-  Default: r4.8xlarge
- EnumWeb7:
-  Description: Aws::Ec2:Instace
-  Type: String
-  Default: m5.2xlarge
- EnumWeb8:
-  Description: Aws::Ec2:Instace
-  Type: String
-  Default: m4.2xlarge
- EnumWeb9:
-  Description: Aws::Ec2:Instace
-  Type: String
-  Default: r4.4xlarge
- EnumWeb10:
-  Description: Aws::Ec2:Instace
-  Type: String
-  Default: r3.8xlarge
- WebServerPort:
-   Description: TCP/IP port of the web server.
-   Type: Number
-   Default: 22
- KeyName:
-   Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
-   Type: 'AWS::EC2::KeyPair::KeyName'
-   ConstraintDescription: must be the name of an existing EC2 KeyPair.
- SSHLocation:
-   Description: The IP address range that can be used to SSH to the EC2 instances
-   Type: String
-   MinLength: '9'
-   MaxLength: '18'
-   Default: 0.0.0.0/16
-   AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
-   ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+  AWS CloudFormation template to create a new VPC or use an existing VPC for ECS
+  deployment
 Mappings:
-  AWSInstanceType2Arch:
-    r3.2xlarge:
-      Arch: '64'
-    r3.4xlarge:
-      Arch: '64'
-    r3.8xlarge:
-      Arch: '64'
-    r4.2xlarge:
-      Arch: '64'
-    r4.4xlarge:
-      Arch: '64'
-    r4.8xlarge:
-      Arch: '64'
-    i2.2xlarge:
-      Arch: '64'
-    i2.4xlarge:
-      Arch: '64'
-    i2.8xlarge:
-      Arch: '64'
-    i3.2xlarge:
-      Arch: '64'
-    i3.4xlarge:
-      Arch: '64'
-    r3.xlarge:
-      Arch: '64'
-    r4.xlarge:
-      Arch: '64'
-    m4.xlarge:
-      Arch: '64'
-    m4.2xlarge:
-      Arch: '64'
-    m4.4xlarge:
-      Arch: '64'
-    m4.10xlarge:
-      Arch: '64'
-    m4.16xlarge:
-      Arch: '64'
-    m5.2xlarge:
-      Arch: '64'
-    m5.xlarge:
-      Arch: '64'
-    m5.4xlarge:
-      Arch: '64'
-    m3.4xlarge:
-      Arch: '64'
-  AWSRegionArch2AMI:
-    us-east-1:
-      '64': ami-0a29159a2836226ac
-    us-east-2:
-      '64': ami-031a4406bc140c17a
-    us-west-1:
-      '64': ami-0bf2ec4eb3efcff66
-    us-west-2:
-      '64': ami-0cfcb3ca4e288d43e
-    ca-central-1:
-      '64': ami-0c5541a5eff1ae777
-    eu-west-1:
-      '64': ami-0a5e337284856aa7c
-    eu-west-2:
-      '64': ami-0f29dcd3bd0b0937a
+  VpcCidrs:
     eu-central-1:
-      '64': ami-0150e2d7f9907d25a
-    ap-south-1:
-      '64': ami-04b8811f37754a184
-    ap-southeast-2:
-      '64': ami-03d0eb96e30a936af
-    ap-northeast-1:
-      '64': ami-0c18b713d365c09e2
-    ap-northeast-2:
-      '64': ami-0955bcf5e3052682e
-    ap-southeast-1:
-      '64': ami-0ac40bb10699dfc91
+      vpc: 10.0.0.0/16
+      pubsubnet1: 10.0.0.0/24
+      pubsubnet2: 10.0.1.0/24
     sa-east-1:
-      '64': ami-024b4b70efe1c7a1c
-Resources:
-  WebServerGroup:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
-    Properties:
-      AvailabilityZones: !GetAZs ''
-      LaunchConfigurationName: !Ref LaunchConfig
-      MinSize: '0'
-      MaxSize: '10'
-      LoadBalancerNames:
-        - !Ref ElasticLoadBalancer
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 2c22c000-1096-429b-93f4-a4f12567f456
-  LaunchConfig:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
-    Properties:
-      KeyName: !Ref KeyName
-      ImageId: !FindInMap 
-        - AWSRegionArch2AMI
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref EnumWeb1
-          - Arch
-      UserData: !Base64 
-        Ref: WebServerPort
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
-      InstanceType: !Ref EnumWeb1
-  WebServerGroup2:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
-    Properties:
-      AvailabilityZones: !GetAZs ''
-      LaunchConfigurationName: !Ref LaunchConfig2
-      MinSize: '0'
-      MaxSize: '10'
-      LoadBalancerNames:
-        - !Ref ElasticLoadBalancer
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 2c22c000-1096-429b-93f4-a4f12567f456
-  LaunchConfig2:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
-    Properties:
-      KeyName: !Ref KeyName
-      ImageId: !FindInMap 
-        - AWSRegionArch2AMI
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref EnumWeb1
-          - Arch
-      UserData: !Base64 
-        Ref: WebServerPort
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
-      InstanceType: !Ref EnumWeb2
-  WebServerGroup3:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
-    Properties:
-      AvailabilityZones: !GetAZs ''
-      LaunchConfigurationName: !Ref LaunchConfig3
-      MinSize: '0'
-      MaxSize: '10'
-      LoadBalancerNames:
-        - !Ref ElasticLoadBalancer
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 2c22c000-1096-429b-93f4-a4f12567f456
-  LaunchConfig3:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
-    Properties:
-      KeyName: !Ref KeyName
-      ImageId: !FindInMap 
-        - AWSRegionArch2AMI
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref EnumWeb3
-          - Arch
-      UserData: !Base64 
-        Ref: WebServerPort
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
-      InstanceType: !Ref EnumWeb3
-  WebServerGroup4:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
-    Properties:
-      AvailabilityZones: !GetAZs ''
-      LaunchConfigurationName: !Ref LaunchConfig4
-      MinSize: '0'
-      MaxSize: '10'
-      LoadBalancerNames:
-        - !Ref ElasticLoadBalancer
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 2c22c000-1096-429b-93f4-a4f12567f456
-  LaunchConfig4:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
-    Properties:
-      KeyName: !Ref KeyName
-      ImageId: !FindInMap 
-        - AWSRegionArch2AMI
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref EnumWeb4
-          - Arch
-      UserData: !Base64 
-        Ref: WebServerPort
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
-      InstanceType: !Ref EnumWeb4
-  WebServerGroup5:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
-    Properties:
-      AvailabilityZones: !GetAZs ''
-      LaunchConfigurationName: !Ref LaunchConfig5
-      MinSize: '0'
-      MaxSize: '10'
-      LoadBalancerNames:
-        - !Ref ElasticLoadBalancer
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 2c22c000-1096-429b-93f4-a4f12567f456
-  LaunchConfig5:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
-    Properties:
-      KeyName: !Ref KeyName
-      ImageId: !FindInMap 
-        - AWSRegionArch2AMI
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref EnumWeb5
-          - Arch
-      UserData: !Base64 
-        Ref: WebServerPort
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
-      InstanceType: !Ref EnumWeb5
-  WebServerGroup6:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
-    Properties:
-      AvailabilityZones: !GetAZs ''
-      LaunchConfigurationName: !Ref LaunchConfig6
-      MinSize: '0'
-      MaxSize: '10'
-      LoadBalancerNames:
-        - !Ref ElasticLoadBalancer
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 2c22c000-1096-429b-93f4-a4f12567f456
-  LaunchConfig6:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
-    Properties:
-      KeyName: !Ref KeyName
-      ImageId: !FindInMap 
-        - AWSRegionArch2AMI
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref EnumWeb6
-          - Arch
-      UserData: !Base64 
-        Ref: WebServerPort
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
-      InstanceType: !Ref EnumWeb6
-  WebServerGroup7:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
-    Properties:
-      AvailabilityZones: !GetAZs ''
-      LaunchConfigurationName: !Ref LaunchConfig7
-      MinSize: '0'
-      MaxSize: '10'
-      LoadBalancerNames:
-        - !Ref ElasticLoadBalancer
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 2c22c000-1096-429b-93f4-a4f12567f456
-  LaunchConfig7:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
-    Properties:
-      KeyName: !Ref KeyName
-      ImageId: !FindInMap 
-        - AWSRegionArch2AMI
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref EnumWeb7
-          - Arch
-      UserData: !Base64 
-        Ref: WebServerPort
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
-      InstanceType: !Ref EnumWeb7
-  WebServerGroup8:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
-    Properties:
-      AvailabilityZones: !GetAZs ''
-      LaunchConfigurationName: !Ref LaunchConfig8
-      MinSize: '0'
-      MaxSize: '10'
-      LoadBalancerNames:
-        - !Ref ElasticLoadBalancer
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 2c22c000-1096-429b-93f4-a4f12567f456
-  LaunchConfig8:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
-    Properties:
-      KeyName: !Ref KeyName
-      ImageId: !FindInMap 
-        - AWSRegionArch2AMI
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref EnumWeb8
-          - Arch
-      UserData: !Base64 
-        Ref: WebServerPort
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
-      InstanceType: !Ref EnumWeb8
-  WebServerGroup9:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
-    Properties:
-      AvailabilityZones: !GetAZs ''
-      LaunchConfigurationName: !Ref LaunchConfig9
-      MinSize: '0'
-      MaxSize: '10'
-      LoadBalancerNames:
-        - !Ref ElasticLoadBalancer
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 2c22c000-1096-429b-93f4-a4f12567f456
-  LaunchConfig9:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
-    Properties:
-      KeyName: !Ref KeyName
-      ImageId: !FindInMap 
-        - AWSRegionArch2AMI
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref EnumWeb9
-          - Arch
-      UserData: !Base64 
-        Ref: WebServerPort
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
-      InstanceType: !Ref EnumWeb9
-  WebServerGroup10:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
-    Properties:
-      AvailabilityZones: !GetAZs ''
-      LaunchConfigurationName: !Ref LaunchConfig10
-      MinSize: '0'
-      MaxSize: '10'
-      LoadBalancerNames:
-        - !Ref ElasticLoadBalancer
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 2c22c000-1096-429b-93f4-a4f12567f456
-  LaunchConfig10:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
-    Properties:
-      KeyName: !Ref KeyName
-      ImageId: !FindInMap 
-        - AWSRegionArch2AMI
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref EnumWeb10
-          - Arch
-      UserData: !Base64 
-        Ref: WebServerPort
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
-      InstanceType: !Ref EnumWeb10
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: efd0867f-8b9e-4354-9eb2-613a187e6747
-  WebServer2ScaleUpPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup2
-      Cooldown: '300'
-      ScalingAdjustment: '2'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
-  WebServer2ScaleDownPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup2
-      Cooldown: '300'
-      ScalingAdjustment: '1'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 71e8c4ab-c777-43f2-93eb-741d2987421a
-  CPUAlarmHigh:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '60'
-      EvaluationPeriods: '2'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer2ScaleUpPolic4
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup
-      ComparisonOperator: GreaterThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a08fa081-f4fe-4e1b-9e35-2afacc5046e0
-  CPUAlarmLow:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '60'
-      EvaluationPeriods: '3'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer2ScaleDownPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup2
-      ComparisonOperator: LessThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 708e7d81-54a6-4ede-a735-9f047b48c649
-  WebServer3ScaleUpPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup3
-      Cooldown: '300'
-      ScalingAdjustment: '1'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
-  WebServer3ScaleDownPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup3
-      Cooldown: '300'
-      ScalingAdjustment: '1'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 71e8c4ab-c777-43f2-93eb-741d2987421a
-  CPUAlarmHigh:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '60'
-      EvaluationPeriods: '3'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer3ScaleUpPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup3
-      ComparisonOperator: GreaterThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a08fa081-f4fe-4e1b-9e35-2afacc5046e0
-  CPUAlarmLow:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-down if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '60'
-      EvaluationPeriods: '2'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer3ScaleDownPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup3
-      ComparisonOperator: LessThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 708e7d81-54a6-4ede-a735-9f047b48c649
-  WebServer4ScaleUpPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup4
-      Cooldown: '300'
-      ScalingAdjustment: '2'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
-  WebServer4ScaleDownPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup4
-      Cooldown: '300'
-      ScalingAdjustment: '2'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 71e8c4ab-c777-43f2-93eb-741d2987421a
-  CPUAlarmHigh:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '60'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer4ScaleUpPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup4
-      ComparisonOperator: GreaterThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a08fa081-f4fe-4e1b-9e35-2afacc5046e0
-  CPUAlarmLow:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-down if CPU > 40% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '60'
-      EvaluationPeriods: '1'
-      Threshold: '40'
-      AlarmActions:
-        - !Ref WebServer4ScaleDownPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup4
-      ComparisonOperator: LessThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 708e7d81-54a6-4ede-a735-9f047b48c649
-  WebServer5ScaleUpPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup5
-      Cooldown: '300'
-      ScalingAdjustment: '3'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
-  WebServer5ScaleDownPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup5
-      Cooldown: '300'
-      ScalingAdjustment: '3'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 71e8c4ab-c777-43f2-93eb-741d2987421a
-  CPUAlarmHigh5:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '60'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer5ScaleUpPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup5
-      ComparisonOperator: GreaterThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a08fa081-f4fe-4e1b-9e35-2afacc5046e0
-  CPUAlarmLow:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-down if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '60'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer5ScaleDownPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup5
-      ComparisonOperator: LessThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 708e7d81-54a6-4ede-a735-9f047b48c649
-  WebServer6ScaleUpPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup6
-      Cooldown: '300'
-      ScalingAdjustment: '3'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
-  WebServer6ScaleDownPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup6
-      Cooldown: '300'
-      ScalingAdjustment: '3'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 71e8c4ab-c777-43f2-93eb-741d2987421a
-  CPUAlarmHigh6:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '60'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer6ScaleUpPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup6
-      ComparisonOperator: GreaterThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a08fa081-f4fe-4e1b-9e35-2afacc5046e0
-  CPUAlarmLow:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-down if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '60'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer6ScaleDownPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup6
-      ComparisonOperator: LessThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 708e7d81-54a6-4ede-a735-9f047b48c649
-  WebServer7ScaleUpPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup7
-      Cooldown: '300'
-      ScalingAdjustment: '3'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
-  WebServer7ScaleDownPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup7
-      Cooldown: '300'
-      ScalingAdjustment: '1'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 71e8c4ab-c777-43f2-93eb-741d2987421a
-  CPUAlarmHigh7:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer7ScaleUpPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup7
-      ComparisonOperator: GreaterThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a08fa081-f4fe-4e1b-9e35-2afacc5046e0
-  CPUAlarmLow:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer7ScaleDownPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup7
-      ComparisonOperator: LessThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 708e7d81-54a6-4ede-a735-9f047b48c649
-  WebServer8ScaleUpPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup8
-      Cooldown: '300'
-      ScalingAdjustment: '3'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
-  WebServer8ScaleDownPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup8
-      Cooldown: '300'
-      ScalingAdjustment: '1'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id:81e8c4ab-c777-43f2-93eb-741d2987421a
-  CPUAlarmHigh8:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer8ScaleUpPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup8
-      ComparisonOperator: GreaterThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a08fa081-f4fe-4e1b-9e35-2afacc5046e0
-  CPUAlarmLow:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-down if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer8ScaleDownPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup8
-      ComparisonOperator: LessThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 708e7d81-54a6-4ede-a735-9f047b48c649
-  WebServer9ScaleUpPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup9
-      Cooldown: '300'
-      ScalingAdjustment: '2'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
-  WebServer9ScaleDownPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup9
-      Cooldown: '300'
-      ScalingAdjustment: '1'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id:81e8c4ab-c777-43f2-93eb-741d2987421a
-  CPUAlarmHigh9:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '2'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer9ScaleUpPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup9
-      ComparisonOperator: GreaterThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a08fa081-f4fe-4e1b-9e35-2afacc5046e0
-  CPUAlarmLow:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-down if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '2'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer9ScaleDownPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup9
-      ComparisonOperator: LessThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 708e7d81-54a6-4ede-a735-9f047b48c649
-  WebServer10ScaleUpPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup10
-      Cooldown: '300'
-      ScalingAdjustment: '2'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
-  WebServer10ScaleDownPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup10
-      Cooldown: '300'
-      ScalingAdjustment: '1'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id:81e8c4ab-c777-43f2-93eb-741d2987421a
-  CPUAlarmHigh10:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer10ScaleUpPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup10
-      ComparisonOperator: GreaterThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a08fa081-f4fe-4e1b-9e35-2afacc5046e0
-  CPUAlarmLow:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer10ScaleDownPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup10
-      ComparisonOperator: LessThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 708e7d81-54a6-4ede-a735-9f047b48c649
-  ElasticLoadBalancer:
-    Type: 'AWS::ElasticLoadBalancing::LoadBalancer'
-    Properties:
-      AvailabilityZones: !GetAZs ''
-      Listeners:
-        - LoadBalancerPort: '80'
-          InstancePort: !Ref WebServerPort
-          Protocol: HTTP
-      HealthCheck:
-        Target: !Join 
+      vpc: 10.0.0.0/16
+      pubsubnet1: 10.0.0.0/24
+      pubsubnet2: 10.0.1.0/24
+    ap-south-1:
+      vpc: 10.0.0.0/16
+      pubsubnet1: 10.0.0.0/24
+      pubsubnet2: 10.0.1.0/24
+    ap-northeast-1:
+      vpc: 10.0.0.0/16
+      pubsubnet1: 10.0.0.0/24
+      pubsubnet2: 10.0.1.0/24
+    ap-northeast-2:
+      vpc: 10.0.0.0/16
+      pubsubnet1: 10.0.0.0/24
+      pubsubnet2: 10.0.1.0/24
+    eu-west-1:
+      vpc: 10.0.0.0/16
+      pubsubnet1: 10.0.0.0/24
+      pubsubnet2: 10.0.1.0/24
+    eu-west-2:
+      vpc: 10.0.0.0/16
+      pubsubnet1: 10.0.0.0/24
+      pubsubnet2: 10.0.1.0/24
+    us-east-1:
+      vpc: 10.0.0.0/16
+      pubsubnet1: 10.0.0.0/24
+      pubsubnet2: 10.0.1.0/24
+    us-west-1:
+      vpc: 10.0.0.0/16
+      pubsubnet1: 10.0.0.0/24
+      pubsubnet2: 10.0.1.0/24
+    us-west-2:
+      vpc: 10.0.0.0/16
+      pubsubnet1: 10.0.0.0/24
+      pubsubnet2: 10.0.1.0/24
+    ap-southeast-2:
+      vpc: 10.0.0.0/16
+      pubsubnet1: 10.0.0.0/24
+      pubsubnet2: 10.0.1.0/24
+    ap-southeast-1:
+      vpc: 10.0.0.0/16
+      pubsubnet1: 10.0.0.0/24
+      pubsubnet2: 10.0.1.0/24
+    sa-east-1:
+      vpc: 10.0.0.0/16
+      pubsubnet1: 10.0.0.0/24
+      pubsubnet2: 10.0.1.0/24
+  EnimusAmiIds:
+    us-east-1:
+      id: ami-0a29159a2836226ac
+    us-east-2:
+      id: ami-031a4406bc140c17a
+    us-west-1:
+      id: ami-0bf2ec4eb3efcff66
+    us-west-2:
+      id: ami-0cfcb3ca4e288d43e
+    eu-west-1:
+      id: ami-0a5e337284856aa7c
+    eu-west-2:
+      id: ami-0f29dcd3bd0b0937a
+    eu-central-1:
+      id: ami-0150e2d7f9907d25a
+    ap-south-1:
+      id: ami-04b8811f37754a184
+    ap-southeast-2:
+      id: ami-03d0eb96e30a936af
+    ap-northeast-1:
+      id: ami-0c18b713d365c09e2
+    ap-northeast-2:
+      id: ami-0955bcf5e3052682e
+    ap-southeast-1:
+      id: ami-0ac40bb10699dfc91
+    sa-east-1:
+      id: ami-024b4b70efe1c7a1c
+Parameters:
+  EcsInstanceType:
+    Type: String
+    Description: ECS EC2 instance type
+    Default: m5.2xlarge
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m4.16xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - r4.8xlarge
+      - r4.4xlarge
+      - r4.2xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i3.8xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+    ConstraintDescription: must be a valid EC2 instance type.
+  EcsInstanceType2:
+    Type: String
+    Description: ECS EC2 instance type
+    Default: m4.10xlarge
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m4.16xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - r4.8xlarge
+      - r4.4xlarge
+      - r4.2xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i3.8xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+    ConstraintDescription: must be a valid EC2 instance type.
+  EcsInstanceType3:
+    Type: String
+    Description: ECS EC2 instance type
+    Default: m4.4xlarge
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m4.16xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - r4.8xlarge
+      - r4.4xlarge
+      - r4.2xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i3.8xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+    ConstraintDescription: must be a valid EC2 instance type.
+  EcsInstanceType4:
+    Type: String
+    Description: ECS EC2 instance type
+    Default: m5.4xlarge
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m4.16xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - r4.8xlarge
+      - r4.4xlarge
+      - r4.2xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i3.8xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+    ConstraintDescription: must be a valid EC2 instance type.
+  EcsInstanceType5:
+    Type: String
+    Description: ECS EC2 instance type
+    Default: m5.2xlarge
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m4.16xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - r4.8xlarge
+      - r4.4xlarge
+      - r4.2xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i3.8xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+    ConstraintDescription: must be a valid EC2 instance type.
+  EcsInstanceType6:
+    Type: String
+    Description: ECS EC2 instance type
+    Default: r4.2xlarge
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m4.16xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - r4.8xlarge
+      - r4.4xlarge
+      - r4.2xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i3.8xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+  EcsInstanceType7:
+    Type: String
+    Description: ECS EC2 instance type
+    Default: r4.2xlarge
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m4.16xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - r4.8xlarge
+      - r4.4xlarge
+      - r4.2xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i3.8xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+    ConstraintDescription: must be a valid EC2 instance type.
+  EcsInstanceType8:
+    Type: String
+    Description: ECS EC2 instance type
+    Default: r4.8xlarge
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m4.16xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - r4.8xlarge
+      - r4.4xlarge
+      - r4.2xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i3.8xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+    ConstraintDescription: must be a valid EC2 instance type.
+  EcsInstanceType9:
+    Type: String
+    Description: ECS EC2 instance type
+    Default: r3.8xlarge
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m4.16xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - r4.8xlarge
+      - r4.4xlarge
+      - r4.2xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i3.8xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+    ConstraintDescription: must be a valid EC2 instance type.
+  EcsInstanceType10:
+    Type: String
+    Description: ECS EC2 instance type
+    Default: r4.4xlarge
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m4.16xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - r4.8xlarge
+      - r4.4xlarge
+      - r4.2xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i3.8xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+    ConstraintDescription: must be a valid EC2 instance type.
+  EcsInstanceType11:
+    Type: String
+    Description: ECS EC2 instance type
+    Default: r4.2xlarge
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m4.16xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - r4.8xlarge
+      - r4.4xlarge
+      - r4.2xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i3.8xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+    ConstraintDescription: must be a valid EC2 instance type.
+  EcsInstanceType12:
+    Type: String
+    Description: ECS EC2 instance type
+    Default: m4.16xlarge
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m4.16xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - r4.8xlarge
+      - r4.4xlarge
+      - r4.2xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i3.8xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+    ConstraintDescription: must be a valid EC2 instance type.
+  EcsInstanceType13:
+    Type: String
+    Description: ECS EC2 instance type
+    Default: m5.4xlarge
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m4.16xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - r4.8xlarge
+      - r4.4xlarge
+      - r4.2xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i3.8xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+    ConstraintDescription: must be a valid EC2 instance type.
+  KeyName:
+    Type: String
+    Description: >-
+      Optional - Name of an existing EC2 KeyPair to enable SSH access to the ECS
+      instances
+    Default: ''
+  VpcId:
+    Type: String
+    Description: Optional - VPC Id of existing VPC. Leave blank to have a new VPC created
+    Default: ''
+    AllowedPattern: '^(?:vpc-[0-9a-f]{8}|)$'
+    ConstraintDescription: VPC Id must begin with 'vpc-' or leave blank to have a new VPC created
+  SubnetIds:
+    Type: CommaDelimitedList
+    Description: >-
+      Optional - Comma separated list of existing VPC Subnet Ids where ECS
+      instances will run
+    Default: ''
+  AsgDesiredSize:
+    Type: Number
+    Description: Initial Desired Capacity of ECS Auto Scaling Group
+    Default: '6'
+  EcsClusterName:
+    Type: String
+    Description: ECS Cluster Name
+    Default: default
+  EcsPort:
+    Type: String
+    Description: >-
+      Optional - Security Group port to open on ECS instances - defaults to port
+      80
+    Default: '80'
+  ElbPort:
+    Type: String
+    Description: >-
+      Optional - Security Group port to open on ELB - port 80 will be open by
+      default
+    Default: '80'
+  ElbProtocol:
+    Type: String
+    Description: Optional - ELB Protocol - defaults to HTTP
+    Default: HTTP
+  ElbHealthCheckTarget:
+    Type: String
+    Description: 'Optional - Health Check Target for ELB - defaults to HTTP:80/'
+    Default: 'HTTP:80/'
+  SourceCidr:
+    Type: String
+    Description: Optional - CIDR/IP range for EcsPort and ElbPort - defaults to 0.0.0.0/0
+    Default: 0.0.0.0/0
+  EcsEndpoint:
+    Type: String
+    Description: 'Optional : ECS Endpoint for the ECS Agent to connect to'
+    Default: ''
+  CreateElasticLoadBalancer:
+    Type: String
+    Description: 'Optional : When set to true, creates a ELB for ECS Service'
+    Default: 'true'
+  VpcAvailabilityZones:
+    Type: CommaDelimitedList
+    Description: >-
+      Optional : Comma-delimited list of two VPC availability zones in which to
+      create subnets
+    Default: ''
+Conditions:
+  CreateVpcResources: !Equals 
+    - Ref: VpcId
+    - ''
+  ExistingVpcResources: !Not 
+    - !Equals 
+      - Ref: VpcId
+      - ''
+  SetEndpointToECSAgent: !Not 
+    - !Equals 
+      - Ref: EcsEndpoint
+      - ''
+  CreateELBForExistingVpc: !And 
+    - !Equals 
+      - Ref: CreateElasticLoadBalancer
+      - 'true'
+    - !Condition ExistingVpcResources
+  CreateELBForNewVpc: !And 
+    - !Equals 
+      - Ref: CreateElasticLoadBalancer
+      - 'true'
+    - !Condition CreateVpcResources
+  CreateELB: !Or 
+    - !Condition CreateELBForExistingVpc
+    - !Condition CreateELBForNewVpc
+  CreateEC2LCWithKeyPair: !Not 
+    - !Equals 
+      - Ref: KeyName
+      - ''
+  CreateEC2LCWithKeyPair2: !Not 
+    - !Equals 
+      - Ref: KeyName
+      - ''
+  CreateEC2LCWithKeyPair3: !Not 
+    - !Equals 
+      - Ref: KeyName
+      - ''
+  CreateEC2LCWithKeyPair4: !Not 
+    - !Equals 
+      - Ref: KeyName
+      - ''
+  CreateEC2LCWithKeyPair5: !Not 
+    - !Equals 
+      - Ref: KeyName
+      - ''
+  CreateEC2LCWithKeyPair6: !Not 
+    - !Equals 
+      - Ref: KeyName
+      - ''
+  CreateEC2LCWithKeyPair7: !Not 
+    - !Equals 
+      - Ref: KeyName
+      - ''
+  CreateEC2LCWithKeyPair8: !Not 
+    - !Equals 
+      - Ref: KeyName
+      - ''
+  CreateEC2LCWithKeyPair9: !Not 
+    - !Equals 
+      - Ref: KeyName
+      - ''
+  CreateEC2LCWithKeyPair10: !Not 
+    - !Equals 
+      - Ref: KeyName
+      - ''
+  CreateEC2LCWithKeyPair11: !Not 
+    - !Equals 
+      - Ref: KeyName
+      - ''
+  CreateEC2LCWithKeyPair12: !Not 
+    - !Equals 
+      - Ref: KeyName
+      - ''
+  CreateEC2LCWithKeyPair13: !Not 
+    - !Equals 
+      - Ref: KeyName
+      - ''
+  CreateEC2LCWithoutKeyPair: !Equals 
+    - !Ref KeyName
+    - ''
+  CreateEC2LCWithoutKeyPair2: !Equals 
+    - !Ref KeyName
+    - ''
+  CreateEC2LCWithoutKeyPair3: !Equals 
+    - !Ref KeyName
+    - ''
+  CreateEC2LCWithoutKeyPair4: !Equals 
+    - !Ref KeyName
+    - ''
+  CreateEC2LCWithoutKeyPair5: !Equals 
+    - !Ref KeyName
+    - ''
+  CreateEC2LCWithoutKeyPair6: !Equals 
+    - !Ref KeyName
+    - ''
+  CreateEC2LCWithoutKeyPair7: !Equals 
+    - !Ref KeyName
+    - ''
+  CreateEC2LCWithoutKeyPair8: !Equals 
+    - !Ref KeyName
+    - ''
+  CreateEC2LCWithoutKeyPair9: !Equals 
+    - !Ref KeyName
+    - ''
+  CreateEC2LCWithoutKeyPair10: !Equals 
+    - !Ref KeyName
+    - ''
+  CreateEC2LCWithoutKeyPair11: !Equals 
+    - !Ref KeyName
+    - ''
+  CreateEC2LCWithoutKeyPair12: !Equals 
+    - !Ref KeyName
+    - ''
+  CreateEC2LCWithoutKeyPair13: !Equals 
+    - !Ref KeyName
+    - ''
+  UseSpecifiedVpcAvailabilityZones: !Not 
+    - !Equals 
+      - 'Fn::Join':
           - ''
-          - - 'HTTP:'
-            - !Ref WebServerPort
-            - /
-        HealthyThreshold: '3'
-        UnhealthyThreshold: '10'
-        Interval: '30'
-        Timeout: '2'
+          - !Ref VpcAvailabilityZones
+      - ''
+Resources:
+  Vpc:
+    Condition: CreateVpcResources
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: !FindInMap 
+        - VpcCidrs
+        - !Ref 'AWS::Region'
+        - vpc
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
     Metadata:
       'AWS::CloudFormation::Designer':
-        id: e613c62c-df26-40b9-b969-f7274589438d
-  InstanceSecurityGroup:
+        id: dcc4cc91-f712-44d8-8ff9-23d51474ac43
+  PubSubnetAz1:
+    Condition: CreateVpcResources
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: !FindInMap 
+        - VpcCidrs
+        - !Ref 'AWS::Region'
+        - pubsubnet1
+      AvailabilityZone: !If 
+        - UseSpecifiedVpcAvailabilityZones
+        - !Select 
+          - '0'
+          - !Ref VpcAvailabilityZones
+        - !Select 
+          - '0'
+          - !GetAZs 
+            Ref: 'AWS::Region'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: cf3ca686-a720-468a-9524-cdeaca55e003
+  PubSubnetAz2:
+    Condition: CreateVpcResources
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: !FindInMap 
+        - VpcCidrs
+        - !Ref 'AWS::Region'
+        - pubsubnet2
+      AvailabilityZone: !If 
+        - UseSpecifiedVpcAvailabilityZones
+        - !Select 
+          - '1'
+          - !Ref VpcAvailabilityZones
+        - !Select 
+          - '1'
+          - !GetAZs 
+            Ref: 'AWS::Region'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: d6518758-a6e4-4afa-aadc-78d670eccfdc
+  InternetGateway:
+    Condition: CreateVpcResources
+    Type: 'AWS::EC2::InternetGateway'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 2357317b-f86b-4fb3-810d-5985b80b7042
+  AttachGateway:
+    Condition: CreateVpcResources
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      VpcId: !Ref Vpc
+      InternetGatewayId: !Ref InternetGateway
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 60e5b5ad-3c33-471c-a3aa-6b171e291509
+  RouteViaIgw:
+    Condition: CreateVpcResources
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref Vpc
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: dda92f45-48ea-40e9-b328-6ea083dd5249
+  PublicRouteViaIgw:
+    Condition: CreateVpcResources
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteViaIgw
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: cf69e08e-908a-4c42-9a95-0b10ec6783c6
+  PubSubnet1RouteTableAssociation:
+    Condition: CreateVpcResources
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PubSubnetAz1
+      RouteTableId: !Ref RouteViaIgw
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 37fb22a9-5e2c-4d20-8320-8a4feb2f81a2
+  PubSubnet2RouteTableAssociation:
+    Condition: CreateVpcResources
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PubSubnetAz2
+      RouteTableId: !Ref RouteViaIgw
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 0d16deea-780b-4a09-bdd0-b6d0abf4e3b1
+  ElbSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
-      GroupDescription: Enable SSH access and HTTP from the load balancer only
+      GroupDescription: ELB Allowed Ports
+      VpcId: !If 
+        - CreateVpcResources
+        - !Ref Vpc
+        - !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: '22'
-          ToPort: '22'
-          CidrIp: !Ref SSHLocation
-        - IpProtocol: tcp
-          FromPort: !Ref WebServerPort
-          ToPort: !Ref WebServerPort
-          SourceSecurityGroupOwnerId: !GetAtt 
-            - ElasticLoadBalancer
-            - SourceSecurityGroup.OwnerAlias
-          SourceSecurityGroupName: !GetAtt 
-            - ElasticLoadBalancer
-            - SourceSecurityGroup.GroupName
+          FromPort: !Ref ElbPort
+          ToPort: !Ref ElbPort
+          CidrIp: !Ref SourceCidr
     Metadata:
       'AWS::CloudFormation::Designer':
-        id: 84d912bc-c566-4476-9d65-3baf2390e6a1
+        id: 335c2473-ccff-4aee-8c92-e36947b16776
+  EcsSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: ECS Allowed Ports
+      VpcId: !If 
+        - CreateVpcResources
+        - !Ref Vpc
+        - !Ref VpcId
+      SecurityGroupIngress: !If 
+        - CreateELB
+        - - IpProtocol: tcp
+            FromPort: !Ref EcsPort
+            ToPort: !Ref EcsPort
+            CidrIp: !Ref SourceCidr
+          - IpProtocol: tcp
+            FromPort: '1'
+            ToPort: '65535'
+            SourceSecurityGroupId: !Ref ElbSecurityGroup
+        - - IpProtocol: tcp
+            FromPort: !Ref EcsPort
+            ToPort: !Ref EcsPort
+            CidrIp: !Ref SourceCidr
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 4358ac86-3ce1-45a4-8059-79b6ea770cc2
+  EcsElasticLoadBalancer:
+    Condition: CreateELBForNewVpc
+    Type: 'AWS::ElasticLoadBalancing::LoadBalancer'
+    Properties:
+      SecurityGroups:
+        - !Ref ElbSecurityGroup
+      Subnets:
+        - !Ref PubSubnetAz1
+        - !Ref PubSubnetAz2
+      CrossZone: 'true'
+      Listeners:
+        - LoadBalancerPort: !Ref ElbPort
+          InstancePort: !Ref EcsPort
+          Protocol: !Ref ElbProtocol
+      HealthCheck:
+        Target: !Ref ElbHealthCheckTarget
+        HealthyThreshold: '2'
+        UnhealthyThreshold: '10'
+        Interval: '30'
+        Timeout: '5'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 969250d3-30e7-4473-a45a-8cd686760d9e
+  EcsElasticLoadBalancerExistingVpc:
+    Condition: CreateELBForExistingVpc
+    Type: 'AWS::ElasticLoadBalancing::LoadBalancer'
+    Properties:
+      SecurityGroups:
+        - !Ref ElbSecurityGroup
+      Subnets: !Ref SubnetIds
+      CrossZone: 'true'
+      Listeners:
+        - LoadBalancerPort: !Ref ElbPort
+          InstancePort: !Ref EcsPort
+          Protocol: !Ref ElbProtocol
+      HealthCheck:
+        Target: !Ref ElbHealthCheckTarget
+        HealthyThreshold: '2'
+        UnhealthyThreshold: '10'
+        Interval: '30'
+        Timeout: '5'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 5e66c2eb-f4f8-49c1-9355-9114f022b46c
+  EcsInstanceLc:
+    Condition: CreateEC2LCWithKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType
+      AssociatePublicIpAddress: true
+      KeyName: !Ref KeyName
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: fda7b431-2c46-42b1-ae7f-61c2dfbf876b
+  EcsInstanceLcWithoutKeyPair:
+    Condition: CreateEC2LCWithoutKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType
+      AssociatePublicIpAddress: true
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: ee89a8a4-b273-447d-b2b6-d01eb62a704f
+  EcsInstanceLc2:
+    Condition: CreateEC2LCWithKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType2
+      AssociatePublicIpAddress: true
+      KeyName: !Ref KeyName
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: fda7b431-2c46-42b1-ae7f-61c2dfbf876b
+  EcsInstanceLcWithoutKeyPair2:
+    Condition: CreateEC2LCWithoutKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType2
+      AssociatePublicIpAddress: true
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: fa906527-e5ae-42c9-84d7-2487b4fbd0f5
+  EcsInstanceLc3:
+    Condition: CreateEC2LCWithKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType3
+      AssociatePublicIpAddress: true
+      KeyName: !Ref KeyName
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: fda7b431-2c46-42b1-ae7f-61c2dfbf876b
+  EcsInstanceLcWithoutKeyPair3:
+    Condition: CreateEC2LCWithoutKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType3
+      AssociatePublicIpAddress: true
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 6449e1bb-891a-4f07-9d2d-1b5026c21b14
+  EcsInstanceLc4:
+    Condition: CreateEC2LCWithKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType4
+      AssociatePublicIpAddress: true
+      KeyName: !Ref KeyName
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: fda7b431-2c46-42b1-ae7f-61c2dfbf876b
+  EcsInstanceLcWithoutKeyPair4:
+    Condition: CreateEC2LCWithoutKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType4
+      AssociatePublicIpAddress: true
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: c5d6010b-9ee9-404d-999a-fe92bcd2fd48
+  EcsInstanceLc5:
+    Condition: CreateEC2LCWithKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType5
+      AssociatePublicIpAddress: true
+      KeyName: !Ref KeyName
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: fda7b431-2c46-42b1-ae7f-61c2dfbf876b
+  EcsInstanceLcWithoutKeyPair5:
+    Condition: CreateEC2LCWithoutKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType5
+      AssociatePublicIpAddress: true
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: ba43dfc9-9ee2-4c55-a430-88d7882a6a94
+  EcsInstanceLc6:
+    Condition: CreateEC2LCWithKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType6
+      AssociatePublicIpAddress: true
+      KeyName: !Ref KeyName
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: fda7b431-2c46-42b1-ae7f-61c2dfbf876b
+  EcsInstanceLcWithoutKeyPair6:
+    Condition: CreateEC2LCWithoutKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType6
+      AssociatePublicIpAddress: true
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 212352f4-9419-473c-be7e-ce2e88246b76
+  EcsInstanceLc7:
+    Condition: CreateEC2LCWithKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType7
+      AssociatePublicIpAddress: true
+      KeyName: !Ref KeyName
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: fda7b431-2c46-42b1-ae7f-61c2dfbf876b
+  EcsInstanceLcWithoutKeyPair7:
+    Condition: CreateEC2LCWithoutKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType7
+      AssociatePublicIpAddress: true
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 9e35cb2e-1a5a-4b32-8f70-1d9a1789d281
+  EcsInstanceLc8:
+    Condition: CreateEC2LCWithKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType8
+      AssociatePublicIpAddress: true
+      KeyName: !Ref KeyName
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: fda7b431-2c46-42b1-ae7f-61c2dfbf876b
+  EcsInstanceLcWithoutKeyPair8:
+    Condition: CreateEC2LCWithoutKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType8
+      AssociatePublicIpAddress: true
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 0dd9f182-85c5-4af8-a1cb-ba9152be03f9
+  EcsInstanceLc9:
+    Condition: CreateEC2LCWithKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType9
+      AssociatePublicIpAddress: true
+      KeyName: !Ref KeyName
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: fda7b431-2c46-42b1-ae7f-61c2dfbf876b
+  EcsInstanceLcWithoutKeyPair9:
+    Condition: CreateEC2LCWithoutKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType9
+      AssociatePublicIpAddress: true
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 0a596bad-812e-481a-9d91-ebc9384bacb8
+  EcsInstanceLc10:
+    Condition: CreateEC2LCWithKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType10
+      AssociatePublicIpAddress: true
+      KeyName: !Ref KeyName
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: fda7b431-2c46-42b1-ae7f-61c2dfbf876b
+  EcsInstanceLcWithoutKeyPair10:
+    Condition: CreateEC2LCWithoutKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType10
+      AssociatePublicIpAddress: true
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 29ba192d-1647-4826-9f73-a17fb8e5f32a
+  EcsInstanceLc11:
+    Condition: CreateEC2LCWithKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType11
+      AssociatePublicIpAddress: true
+      KeyName: !Ref KeyName
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: fda7b431-2c46-42b1-ae7f-61c2dfbf876b
+  EcsInstanceLcWithoutKeyPair11:
+    Condition: CreateEC2LCWithoutKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType11
+      AssociatePublicIpAddress: true
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 5cb0ed5b-0c46-401e-baad-f29830f10f36
+  EcsInstanceLc12:
+    Condition: CreateEC2LCWithKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType12
+      AssociatePublicIpAddress: true
+      KeyName: !Ref KeyName
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: fda7b431-2c46-42b1-ae7f-61c2dfbf876b
+  EcsInstanceLcWithoutKeyPair12:
+    Condition: CreateEC2LCWithoutKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType12
+      AssociatePublicIpAddress: true
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 38298739-9246-4466-81c1-a454ede8721f
+
+  EcsInstanceLc13:
+    Condition: CreateEC2LCWithKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType13
+      AssociatePublicIpAddress: true
+      KeyName: !Ref KeyName
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: fda7b431-2c46-42b1-ae7f-61c2dfbf876b
+  EcsInstanceLcWithoutKeyPair13:
+    Condition: CreateEC2LCWithoutKeyPair
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap 
+        - EnimusAmiIds
+        - !Ref 'AWS::Region'
+        - id
+      InstanceType: !Ref EcsInstanceType13
+      AssociatePublicIpAddress: true
+      SecurityGroups:
+        - !Ref EcsSecurityGroup
+      UserData: !If 
+        - SetEndpointToECSAgent
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+              - |-
+
+                echo ECS_BACKEND_HOST=
+              - !Ref EcsEndpoint
+              - ' >> /etc/ecs/ecs.config'
+        - !Base64 
+          'Fn::Join':
+            - ''
+            - - |
+                #!/bin/bash
+              - echo ECS_CLUSTER=
+              - !Ref EcsClusterName
+              - ' >> /etc/ecs/ecs.config'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 6c9959a1-7bd9-40b5-9600-343bd5ea5597
+  EcsInstanceAsg:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      LoadBalancerNames: !If 
+        - CreateELBForNewVpc
+        - - !Ref EcsElasticLoadBalancer
+        - - !Ref EcsElasticLoadBalancerExistingVpc
+      AvailabilityZones: !If 
+        - UseSpecifiedVpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !Ref VpcAvailabilityZones
+          - !Select 
+            - '1'
+            - !Ref VpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+          - !Select 
+            - '1'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+      VPCZoneIdentifier: !If 
+        - CreateVpcResources
+        - - !Join 
+            - ','
+            - - !Ref PubSubnetAz1
+              - !Ref PubSubnetAz2
+        - !Ref SubnetIds
+      LaunchConfigurationName: !If 
+        - CreateEC2LCWithKeyPair
+        - !Ref EcsInstanceLc
+        - !Ref EcsInstanceLcWithoutKeyPair
+      MinSize: '0'
+      MaxSize: '30'
+      DesiredCapacity: !Ref AsgDesiredSize
+      Tags:
+        - Key: Name
+          Value: !Join 
+            - ''
+            - - 'ECS Instance - '
+              - !Ref 'AWS::StackName'
+          PropagateAtLaunch: 'true'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 9b4babe9-236c-4a6b-b22d-1699b01539ec
+  EcsInstanceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2008-10-17
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Principal:
+              Service: ec2.amazonaws.com
+            Effect: Allow
+            Sid: ''
+      Path: /
+      Policies:
+        - PolicyName: EcsInstance
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ecs:CreateCluster'
+                  - 'ecs:DeregisterContainerInstance'
+                  - 'ecs:DiscoverPollEndpoint'
+                  - 'ecs:Poll'
+                  - 'ecs:RegisterContainerInstance'
+                  - 'ecs:StartTelemetrySession'
+                  - 'ecs:Submit*'
+                Resource:
+                  - '*'
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                  - 'logs:DescribeLogStreams'
+                Resource:
+                  - 'arn:aws:logs:*:*:*'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: e6d62579-f43a-4e19-93ed-730e63b67779
+  EcsInstanceAsg2:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      LoadBalancerNames: !If 
+        - CreateELBForNewVpc
+        - - !Ref EcsElasticLoadBalancer
+        - - !Ref EcsElasticLoadBalancerExistingVpc
+      AvailabilityZones: !If 
+        - UseSpecifiedVpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !Ref VpcAvailabilityZones
+          - !Select 
+            - '1'
+            - !Ref VpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+          - !Select 
+            - '1'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+      VPCZoneIdentifier: !If 
+        - CreateVpcResources
+        - - !Join 
+            - ','
+            - - !Ref PubSubnetAz1
+              - !Ref PubSubnetAz2
+        - !Ref SubnetIds
+      LaunchConfigurationName: !If 
+        - CreateEC2LCWithKeyPair
+        - !Ref EcsInstanceLc2
+        - !Ref EcsInstanceLcWithoutKeyPair2
+      MinSize: '0'
+      MaxSize: '30'
+      DesiredCapacity: !Ref AsgDesiredSize
+      Tags:
+        - Key: Name
+          Value: !Join 
+            - ''
+            - - 'ECS Instance - '
+              - !Ref 'AWS::StackName'
+          PropagateAtLaunch: 'true'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 9b4babe9-236c-4a6b-b22d-1699b01539ec
+  EcsInstanceAsg3:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      LoadBalancerNames: !If 
+        - CreateELBForNewVpc
+        - - !Ref EcsElasticLoadBalancer
+        - - !Ref EcsElasticLoadBalancerExistingVpc
+      AvailabilityZones: !If 
+        - UseSpecifiedVpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !Ref VpcAvailabilityZones
+          - !Select 
+            - '1'
+            - !Ref VpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+          - !Select 
+            - '1'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+      VPCZoneIdentifier: !If 
+        - CreateVpcResources
+        - - !Join 
+            - ','
+            - - !Ref PubSubnetAz1
+              - !Ref PubSubnetAz2
+        - !Ref SubnetIds
+      LaunchConfigurationName: !If 
+        - CreateEC2LCWithKeyPair
+        - !Ref EcsInstanceLc3
+        - !Ref EcsInstanceLcWithoutKeyPair3
+      MinSize: '0'
+      MaxSize: '30'
+      DesiredCapacity: !Ref AsgDesiredSize
+      Tags:
+        - Key: Name
+          Value: !Join 
+            - ''
+            - - 'ECS Instance - '
+              - !Ref 'AWS::StackName'
+          PropagateAtLaunch: 'true'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 9b4babe9-236c-4a6b-b22d-1699b01539ec
+  EcsInstanceAsg4:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      LoadBalancerNames: !If 
+        - CreateELBForNewVpc
+        - - !Ref EcsElasticLoadBalancer
+        - - !Ref EcsElasticLoadBalancerExistingVpc
+      AvailabilityZones: !If 
+        - UseSpecifiedVpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !Ref VpcAvailabilityZones
+          - !Select 
+            - '1'
+            - !Ref VpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+          - !Select 
+            - '1'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+      VPCZoneIdentifier: !If 
+        - CreateVpcResources
+        - - !Join 
+            - ','
+            - - !Ref PubSubnetAz1
+              - !Ref PubSubnetAz2
+        - !Ref SubnetIds
+      LaunchConfigurationName: !If 
+        - CreateEC2LCWithKeyPair
+        - !Ref EcsInstanceLc4
+        - !Ref EcsInstanceLcWithoutKeyPair4
+      MinSize: '0'
+      MaxSize: '30'
+      DesiredCapacity: !Ref AsgDesiredSize
+      Tags:
+        - Key: Name
+          Value: !Join 
+            - ''
+            - - 'ECS Instance - '
+              - !Ref 'AWS::StackName'
+          PropagateAtLaunch: 'true'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 9b4babe9-236c-4a6b-b22d-1699b01539ec
+  EcsInstanceAsg5:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      LoadBalancerNames: !If 
+        - CreateELBForNewVpc
+        - - !Ref EcsElasticLoadBalancer
+        - - !Ref EcsElasticLoadBalancerExistingVpc
+      AvailabilityZones: !If 
+        - UseSpecifiedVpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !Ref VpcAvailabilityZones
+          - !Select 
+            - '1'
+            - !Ref VpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+          - !Select 
+            - '1'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+      VPCZoneIdentifier: !If 
+        - CreateVpcResources
+        - - !Join 
+            - ','
+            - - !Ref PubSubnetAz1
+              - !Ref PubSubnetAz2
+        - !Ref SubnetIds
+      LaunchConfigurationName: !If 
+        - CreateEC2LCWithKeyPair
+        - !Ref EcsInstanceLc5
+        - !Ref EcsInstanceLcWithoutKeyPair5
+      MinSize: '0'
+      MaxSize: '30'
+      DesiredCapacity: !Ref AsgDesiredSize
+      Tags:
+        - Key: Name
+          Value: !Join 
+            - ''
+            - - 'ECS Instance - '
+              - !Ref 'AWS::StackName'
+          PropagateAtLaunch: 'true'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 9b4babe9-236c-4a6b-b22d-1699b01539ec
+  EcsInstanceAsg6:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      LoadBalancerNames: !If 
+        - CreateELBForNewVpc
+        - - !Ref EcsElasticLoadBalancer
+        - - !Ref EcsElasticLoadBalancerExistingVpc
+      AvailabilityZones: !If 
+        - UseSpecifiedVpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !Ref VpcAvailabilityZones
+          - !Select 
+            - '1'
+            - !Ref VpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+          - !Select 
+            - '1'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+      VPCZoneIdentifier: !If 
+        - CreateVpcResources
+        - - !Join 
+            - ','
+            - - !Ref PubSubnetAz1
+              - !Ref PubSubnetAz2
+        - !Ref SubnetIds
+      LaunchConfigurationName: !If 
+        - CreateEC2LCWithKeyPair
+        - !Ref EcsInstanceLc6
+        - !Ref EcsInstanceLcWithoutKeyPair6
+      MinSize: '0'
+      MaxSize: '30'
+      DesiredCapacity: !Ref AsgDesiredSize
+      Tags:
+        - Key: Name
+          Value: !Join 
+            - ''
+            - - 'ECS Instance - '
+              - !Ref 'AWS::StackName'
+          PropagateAtLaunch: 'true'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 9b4babe9-236c-4a6b-b22d-1699b01539ec
+  EcsInstanceAsg7:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      LoadBalancerNames: !If 
+        - CreateELBForNewVpc
+        - - !Ref EcsElasticLoadBalancer
+        - - !Ref EcsElasticLoadBalancerExistingVpc
+      AvailabilityZones: !If 
+        - UseSpecifiedVpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !Ref VpcAvailabilityZones
+          - !Select 
+            - '1'
+            - !Ref VpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+          - !Select 
+            - '1'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+      VPCZoneIdentifier: !If 
+        - CreateVpcResources
+        - - !Join 
+            - ','
+            - - !Ref PubSubnetAz1
+              - !Ref PubSubnetAz2
+        - !Ref SubnetIds
+      LaunchConfigurationName: !If 
+        - CreateEC2LCWithKeyPair
+        - !Ref EcsInstanceLc7
+        - !Ref EcsInstanceLcWithoutKeyPair7
+      MinSize: '0'
+      MaxSize: '30'
+      DesiredCapacity: !Ref AsgDesiredSize
+      Tags:
+        - Key: Name
+          Value: !Join 
+            - ''
+            - - 'ECS Instance - '
+              - !Ref 'AWS::StackName'
+          PropagateAtLaunch: 'true'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 9b4babe9-236c-4a6b-b22d-1699b01539ec
+  EcsInstanceAsg8:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      LoadBalancerNames: !If 
+        - CreateELBForNewVpc
+        - - !Ref EcsElasticLoadBalancer
+        - - !Ref EcsElasticLoadBalancerExistingVpc
+      AvailabilityZones: !If 
+        - UseSpecifiedVpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !Ref VpcAvailabilityZones
+          - !Select 
+            - '1'
+            - !Ref VpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+          - !Select 
+            - '1'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+      VPCZoneIdentifier: !If 
+        - CreateVpcResources
+        - - !Join 
+            - ','
+            - - !Ref PubSubnetAz1
+              - !Ref PubSubnetAz2
+        - !Ref SubnetIds
+      LaunchConfigurationName: !If 
+        - CreateEC2LCWithKeyPair
+        - !Ref EcsInstanceLc8
+        - !Ref EcsInstanceLcWithoutKeyPair8
+      MinSize: '0'
+      MaxSize: '30'
+      DesiredCapacity: !Ref AsgDesiredSize
+      Tags:
+        - Key: Name
+          Value: !Join 
+            - ''
+            - - 'ECS Instance - '
+              - !Ref 'AWS::StackName'
+          PropagateAtLaunch: 'true'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 9b4babe9-236c-4a6b-b22d-1699b01539ec
+  EcsInstanceAsg9:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      LoadBalancerNames: !If 
+        - CreateELBForNewVpc
+        - - !Ref EcsElasticLoadBalancer
+        - - !Ref EcsElasticLoadBalancerExistingVpc
+      AvailabilityZones: !If 
+        - UseSpecifiedVpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !Ref VpcAvailabilityZones
+          - !Select 
+            - '1'
+            - !Ref VpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+          - !Select 
+            - '1'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+      VPCZoneIdentifier: !If 
+        - CreateVpcResources
+        - - !Join 
+            - ','
+            - - !Ref PubSubnetAz1
+              - !Ref PubSubnetAz2
+        - !Ref SubnetIds
+      LaunchConfigurationName: !If 
+        - CreateEC2LCWithKeyPair
+        - !Ref EcsInstanceLc9
+        - !Ref EcsInstanceLcWithoutKeyPair9
+      MinSize: '0'
+      MaxSize: '30'
+      DesiredCapacity: !Ref AsgDesiredSize
+      Tags:
+        - Key: Name
+          Value: !Join 
+            - ''
+            - - 'ECS Instance - '
+              - !Ref 'AWS::StackName'
+          PropagateAtLaunch: 'true'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 9b4babe9-236c-4a6b-b22d-1699b01539ec
+  EcsInstanceAsg10:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      LoadBalancerNames: !If 
+        - CreateELBForNewVpc
+        - - !Ref EcsElasticLoadBalancer
+        - - !Ref EcsElasticLoadBalancerExistingVpc
+      AvailabilityZones: !If 
+        - UseSpecifiedVpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !Ref VpcAvailabilityZones
+          - !Select 
+            - '1'
+            - !Ref VpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+          - !Select 
+            - '1'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+      VPCZoneIdentifier: !If 
+        - CreateVpcResources
+        - - !Join 
+            - ','
+            - - !Ref PubSubnetAz1
+              - !Ref PubSubnetAz2
+        - !Ref SubnetIds
+      LaunchConfigurationName: !If 
+        - CreateEC2LCWithKeyPair
+        - !Ref EcsInstanceLc10
+        - !Ref EcsInstanceLcWithoutKeyPair10
+      MinSize: '0'
+      MaxSize: '30'
+      DesiredCapacity: !Ref AsgDesiredSize
+      Tags:
+        - Key: Name
+          Value: !Join 
+            - ''
+            - - 'ECS Instance - '
+              - !Ref 'AWS::StackName'
+          PropagateAtLaunch: 'true'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 9b4babe9-236c-4a6b-b22d-1699b01539ec
+  EcsInstanceAsg11:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      LoadBalancerNames: !If 
+        - CreateELBForNewVpc
+        - - !Ref EcsElasticLoadBalancer
+        - - !Ref EcsElasticLoadBalancerExistingVpc
+      AvailabilityZones: !If 
+        - UseSpecifiedVpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !Ref VpcAvailabilityZones
+          - !Select 
+            - '1'
+            - !Ref VpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+          - !Select 
+            - '1'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+      VPCZoneIdentifier: !If 
+        - CreateVpcResources
+        - - !Join 
+            - ','
+            - - !Ref PubSubnetAz1
+              - !Ref PubSubnetAz2
+        - !Ref SubnetIds
+      LaunchConfigurationName: !If 
+        - CreateEC2LCWithKeyPair
+        - !Ref EcsInstanceLc11
+        - !Ref EcsInstanceLcWithoutKeyPair11
+      MinSize: '0'
+      MaxSize: '30'
+      DesiredCapacity: !Ref AsgDesiredSize
+      Tags:
+        - Key: Name
+          Value: !Join 
+            - ''
+            - - 'ECS Instance - '
+              - !Ref 'AWS::StackName'
+          PropagateAtLaunch: 'true'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 9b4babe9-236c-4a6b-b22d-1699b01539ec
+  EcsInstanceAsg12:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      LoadBalancerNames: !If 
+        - CreateELBForNewVpc
+        - - !Ref EcsElasticLoadBalancer
+        - - !Ref EcsElasticLoadBalancerExistingVpc
+      AvailabilityZones: !If 
+        - UseSpecifiedVpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !Ref VpcAvailabilityZones
+          - !Select 
+            - '1'
+            - !Ref VpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+          - !Select 
+            - '1'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+      VPCZoneIdentifier: !If 
+        - CreateVpcResources
+        - - !Join 
+            - ','
+            - - !Ref PubSubnetAz1
+              - !Ref PubSubnetAz2
+        - !Ref SubnetIds
+      LaunchConfigurationName: !If 
+        - CreateEC2LCWithKeyPair
+        - !Ref EcsInstanceLc12
+        - !Ref EcsInstanceLcWithoutKeyPair12
+      MinSize: '0'
+      MaxSize: '30'
+      DesiredCapacity: !Ref AsgDesiredSize
+      Tags:
+        - Key: Name
+          Value: !Join 
+            - ''
+            - - 'ECS Instance - '
+              - !Ref 'AWS::StackName'
+          PropagateAtLaunch: 'true'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 9b4babe9-236c-4a6b-b22d-1699b01539ec
+  EcsInstanceAsg13:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      LoadBalancerNames: !If 
+        - CreateELBForNewVpc
+        - - !Ref EcsElasticLoadBalancer
+        - - !Ref EcsElasticLoadBalancerExistingVpc
+      AvailabilityZones: !If 
+        - UseSpecifiedVpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !Ref VpcAvailabilityZones
+          - !Select 
+            - '1'
+            - !Ref VpcAvailabilityZones
+        - - !Select 
+            - '0'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+          - !Select 
+            - '1'
+            - !GetAZs 
+              Ref: 'AWS::Region'
+      VPCZoneIdentifier: !If 
+        - CreateVpcResources
+        - - !Join 
+            - ','
+            - - !Ref PubSubnetAz1
+              - !Ref PubSubnetAz2
+        - !Ref SubnetIds
+      LaunchConfigurationName: !If 
+        - CreateEC2LCWithKeyPair
+        - !Ref EcsInstanceLc13
+        - !Ref EcsInstanceLcWithoutKeyPair13
+      MinSize: '0'
+      MaxSize: '30'
+      DesiredCapacity: !Ref AsgDesiredSize
+      Tags:
+        - Key: Name
+          Value: !Join 
+            - ''
+            - - 'ECS Instance - '
+              - !Ref 'AWS::StackName'
+          PropagateAtLaunch: 'true'
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 9b4babe9-236c-4a6b-b22d-1699b01539ec
 Outputs:
-  URL:
-    Description: The URL of the website
-    Value: !Join 
+  EcsInstanceAsgName1:
+    Description: Auto Scaling Group Name for ECS Instances
+    Value: !Ref EcsInstanceAsg
+  EcsInstanceAsgName2:
+    Description: Auto Scaling Group Name for ECS Instances
+    Value: !Ref EcsInstanceAsg2
+  EcsInstanceAsgName3:
+    Description: Auto Scaling Group Name for ECS Instances
+    Value: !Ref EcsInstanceAsg3
+  EcsInstanceAsgName4:
+    Description: Auto Scaling Group Name for ECS Instances
+    Value: !Ref EcsInstanceAsg4
+  EcsInstanceAsgName5:
+    Description: Auto Scaling Group Name for ECS Instances
+    Value: !Ref EcsInstanceAsg5
+  EcsInstanceAsgName6:
+    Description: Auto Scaling Group Name for ECS Instances
+    Value: !Ref EcsInstanceAsg6
+  EcsInstanceAsgName7:
+    Description: Auto Scaling Group Name for ECS Instances
+    Value: !Ref EcsInstanceAsg7
+  EcsInstanceAsgName8:
+    Description: Auto Scaling Group Name for ECS Instances
+    Value: !Ref EcsInstanceAsg8
+  EcsInstanceAsgName9:
+    Description: Auto Scaling Group Name for ECS Instances
+    Value: !Ref EcsInstanceAsg9
+  EcsInstanceAsgName10:
+    Description: Auto Scaling Group Name for ECS Instances
+    Value: !Ref EcsInstanceAsg10
+  EcsInstanceAsgName11:
+    Description: Auto Scaling Group Name for ECS Instances
+    Value: !Ref EcsInstanceAsg11
+  EcsInstanceAsgName12:
+    Description: Auto Scaling Group Name for ECS Instances
+    Value: !Ref EcsInstanceAsg12
+  EcsInstanceAsgName13:
+    Description: Auto Scaling Group Name for ECS Instances
+    Value: !Ref EcsInstanceAsg13
+  EcsElbName:
+    Description: Load Balancer for ECS Service
+    Value: !If 
+      - CreateELB
+      - !If 
+        - CreateELBForNewVpc
+        - !Ref EcsElasticLoadBalancer
+        - !Ref EcsElasticLoadBalancerExistingVpc
       - ''
-      - - 'http://'
-        - !GetAtt 
-          - ElasticLoadBalancer
-          - DNSName
 Metadata:
   'AWS::CloudFormation::Designer':
-    e613c62c-df26-40b9-b969-f7274589438d:
+    e6d62579-f43a-4e19-93ed-730e63b67779:
       size:
         width: 60
         height: 60
       position:
         x: 60
-        'y': 90
+        'y': 750
       z: 1
       embeds: []
-    84d912bc-c566-4476-9d65-3baf2390e6a1:
+    a42f8eb4-843a-4274-b146-d44903e71e97:
       size:
         width: 60
         height: 60
       position:
         x: 180
-        'y': 90
-      z: 1
-      embeds: []
-    efd0867f-8b9e-4354-9eb2-613a187e6747:
-      size:
-        width: 60
-        height: 60
-      position:
-        x: 60
-        'y': 210
+        'y': 750
       z: 1
       embeds: []
       isassociatedwith:
-        - 84d912bc-c566-4476-9d65-3baf2390e6a1
-    2c22c000-1096-429b-93f4-a4f12567f456:
-      size:
-        width: 60
-        height: 60
-      position:
-        x: 180
-        'y': 210
-      z: 1
-      embeds: []
-      isassociatedwith:
-        - efd0867f-8b9e-4354-9eb2-613a187e6747
-        - e613c62c-df26-40b9-b969-f7274589438d
-    71e8c4ab-c777-43f2-93eb-741d2987421a:
+        - e6d62579-f43a-4e19-93ed-730e63b67779
+    2357317b-f86b-4fb3-810d-5985b80b7042:
       size:
         width: 60
         height: 60
       position:
         x: 300
-        'y': 90
+        'y': 750
       z: 1
       embeds: []
-      isassociatedwith:
-        - 2c22c000-1096-429b-93f4-a4f12567f456
-    708e7d81-54a6-4ede-a735-9f047b48c649:
+    dcc4cc91-f712-44d8-8ff9-23d51474ac43:
+      size:
+        width: 690
+        height: 600
+      position:
+        x: 60
+        'y': 90
+      z: 1
+      embeds:
+        - dda92f45-48ea-40e9-b328-6ea083dd5249
+        - d6518758-a6e4-4afa-aadc-78d670eccfdc
+        - cf3ca686-a720-468a-9524-cdeaca55e003
+    335c2473-ccff-4aee-8c92-e36947b16776:
       size:
         width: 60
         height: 60
       position:
-        x: 300
+        x: 420
+        'y': 750
+      z: 1
+      embeds: []
+    5e66c2eb-f4f8-49c1-9355-9114f022b46c:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 540
+        'y': 750
+      z: 1
+      embeds: []
+      isassociatedwith:
+        - 335c2473-ccff-4aee-8c92-e36947b16776
+    4358ac86-3ce1-45a4-8059-79b6ea770cc2:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 660
+        'y': 750
+      z: 1
+      embeds: []
+    6c9959a1-7bd9-40b5-9600-343bd5ea5597:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 810
+        'y': 90
+      z: 1
+      embeds: []
+      isassociatedwith:
+        - 4358ac86-3ce1-45a4-8059-79b6ea770cc2
+    38298739-9246-4466-81c1-a454ede8721f:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 810
         'y': 210
       z: 1
       embeds: []
-    45b880b5-d60d-4c25-92a4-41eda05bfc8a:
+      isassociatedwith:
+        - 4358ac86-3ce1-45a4-8059-79b6ea770cc2
+    5cb0ed5b-0c46-401e-baad-f29830f10f36:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 810
+        'y': 330
+      z: 1
+      embeds: []
+      isassociatedwith:
+        - 4358ac86-3ce1-45a4-8059-79b6ea770cc2
+    29ba192d-1647-4826-9f73-a17fb8e5f32a:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 810
+        'y': 450
+      z: 1
+      embeds: []
+      isassociatedwith:
+        - 4358ac86-3ce1-45a4-8059-79b6ea770cc2
+    0a596bad-812e-481a-9d91-ebc9384bacb8:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 810
+        'y': 570
+      z: 1
+      embeds: []
+      isassociatedwith:
+        - 4358ac86-3ce1-45a4-8059-79b6ea770cc2
+    0dd9f182-85c5-4af8-a1cb-ba9152be03f9:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 810
+        'y': 690
+      z: 1
+      embeds: []
+      isassociatedwith:
+        - 4358ac86-3ce1-45a4-8059-79b6ea770cc2
+    9e35cb2e-1a5a-4b32-8f70-1d9a1789d281:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 780
+        'y': 810
+      z: 1
+      embeds: []
+      isassociatedwith:
+        - 4358ac86-3ce1-45a4-8059-79b6ea770cc2
+    212352f4-9419-473c-be7e-ce2e88246b76:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 930
+        'y': 90
+      z: 1
+      embeds: []
+      isassociatedwith:
+        - 4358ac86-3ce1-45a4-8059-79b6ea770cc2
+    ba43dfc9-9ee2-4c55-a430-88d7882a6a94:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 930
+        'y': 210
+      z: 1
+      embeds: []
+      isassociatedwith:
+        - 4358ac86-3ce1-45a4-8059-79b6ea770cc2
+    c5d6010b-9ee9-404d-999a-fe92bcd2fd48:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 930
+        'y': 330
+      z: 1
+      embeds: []
+      isassociatedwith:
+        - 4358ac86-3ce1-45a4-8059-79b6ea770cc2
+    6449e1bb-891a-4f07-9d2d-1b5026c21b14:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 930
+        'y': 450
+      z: 1
+      embeds: []
+      isassociatedwith:
+        - 4358ac86-3ce1-45a4-8059-79b6ea770cc2
+    fa906527-e5ae-42c9-84d7-2487b4fbd0f5:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 930
+        'y': 570
+      z: 1
+      embeds: []
+      isassociatedwith:
+        - 4358ac86-3ce1-45a4-8059-79b6ea770cc2
+    ee89a8a4-b273-447d-b2b6-d01eb62a704f:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 930
+        'y': 690
+      z: 1
+      embeds: []
+      isassociatedwith:
+        - 4358ac86-3ce1-45a4-8059-79b6ea770cc2
+    fda7b431-2c46-42b1-ae7f-61c2dfbf876b:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 900
+        'y': 810
+      z: 1
+      embeds: []
+      isassociatedwith:
+        - 4358ac86-3ce1-45a4-8059-79b6ea770cc2
+    dda92f45-48ea-40e9-b328-6ea083dd5249:
+      size:
+        width: 240
+        height: 240
+      position:
+        x: 390
+        'y': 150
+      z: 2
+      parent: dcc4cc91-f712-44d8-8ff9-23d51474ac43
+      embeds:
+        - cf69e08e-908a-4c42-9a95-0b10ec6783c6
+      iscontainedinside:
+        - dcc4cc91-f712-44d8-8ff9-23d51474ac43
+    cf69e08e-908a-4c42-9a95-0b10ec6783c6:
+      size:
+        width: 60
+        height: 60
+      position:
+        x: 420
+        'y': 210
+      z: 3
+      parent: dda92f45-48ea-40e9-b328-6ea083dd5249
+      embeds: []
+      isassociatedwith:
+        - 2357317b-f86b-4fb3-810d-5985b80b7042
+      iscontainedinside:
+        - dda92f45-48ea-40e9-b328-6ea083dd5249
+    60e5b5ad-3c33-471c-a3aa-6b171e291509:
+      source:
+        id: dcc4cc91-f712-44d8-8ff9-23d51474ac43
+      target:
+        id: 2357317b-f86b-4fb3-810d-5985b80b7042
+    d6518758-a6e4-4afa-aadc-78d670eccfdc:
+      size:
+        width: 150
+        height: 150
+      position:
+        x: 90
+        'y': 450
+      z: 2
+      parent: dcc4cc91-f712-44d8-8ff9-23d51474ac43
+      embeds: []
+      iscontainedinside:
+        - dcc4cc91-f712-44d8-8ff9-23d51474ac43
+    0d16deea-780b-4a09-bdd0-b6d0abf4e3b1:
+      source:
+        id: dda92f45-48ea-40e9-b328-6ea083dd5249
+      target:
+        id: d6518758-a6e4-4afa-aadc-78d670eccfdc
+    cf3ca686-a720-468a-9524-cdeaca55e003:
+      size:
+        width: 240
+        height: 240
+      position:
+        x: 90
+        'y': 150
+      z: 2
+      parent: dcc4cc91-f712-44d8-8ff9-23d51474ac43
+      embeds:
+        - 9b4babe9-236c-4a6b-b22d-1699b01539ec
+      iscontainedinside:
+        - dcc4cc91-f712-44d8-8ff9-23d51474ac43
+    969250d3-30e7-4473-a45a-8cd686760d9e:
       size:
         width: 60
         height: 60
       position:
         x: 60
-        'y': 330
+        'y': 870
       z: 1
       embeds: []
       isassociatedwith:
-        - 2c22c000-1096-429b-93f4-a4f12567f456
-    a08fa081-f4fe-4e1b-9e35-2afacc5046e0:
+        - 335c2473-ccff-4aee-8c92-e36947b16776
+      iscontainedinside:
+        - cf3ca686-a720-468a-9524-cdeaca55e003
+        - d6518758-a6e4-4afa-aadc-78d670eccfdc
+    9b4babe9-236c-4a6b-b22d-1699b01539ec:
       size:
         width: 60
         height: 60
       position:
-        x: 180
-        'y': 330
-      z: 1
+        x: 120
+        'y': 210
+      z: 3
+      parent: cf3ca686-a720-468a-9524-cdeaca55e003
       embeds: []
-    
+      isassociatedwith:
+        - fda7b431-2c46-42b1-ae7f-61c2dfbf876b
+        - 5e66c2eb-f4f8-49c1-9355-9114f022b46c
+      iscontainedinside:
+        - cf3ca686-a720-468a-9524-cdeaca55e003
+    37fb22a9-5e2c-4d20-8320-8a4feb2f81a2:
+      source:
+        id: dda92f45-48ea-40e9-b328-6ea083dd5249
+      target:
+        id: cf3ca686-a720-468a-9524-cdeaca55e003
