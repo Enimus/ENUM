@@ -140,7 +140,7 @@ Mappings:
       '64': ami-70b5f209
     eu-west-2:
       '64': ami-344ca853
-    sa-east-1a:
+    sa-east-1:
       '64': ami-ad6e25c1
 Resources:
   WebServerGroup:
