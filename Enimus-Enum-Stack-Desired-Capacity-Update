@@ -113,7 +113,7 @@ Mappings:
       Arch: '64'
     m3.4xlarge:
       Arch: '64'
- AWSRegionArch2AMI:
+  AWSRegionArch2AMI:
     us-east-1:
       '64':  ami-ec9a6d91
     us-east-2:
