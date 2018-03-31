@@ -1,0 +1,865 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: >-
+
+  AWS CloudFormation Sample Template AutoScalingMultiAZSample: Create a
+
+  multi-az, load balanced and Auto Scaled sample web site running on an Apache
+
+  Web Server with PHP. The application is configured to span all Availability
+
+  Zones in the region and is Auto-Scaled based on the CPU utilization of the web
+
+  servers. The instances are load balanced with a simple health check against
+
+  the default web page. The web site is available on port 80, however, the
+
+  instances can be configured to listen on any port (8888 by default).
+
+  **WARNING** This template creates one or more Amazon EC2 instances and an
+
+  Elastic Load Balancer. You will be billed for the AWS resources used if you
+
+  create a stack from this template.
+
+Parameters:
+
+ EnumWeb1:
+
+  Description: Aws::Ec2:Instace
+
+  Type: String
+
+  Default: m5.4xlarge
+
+ EnumWeb2:
+
+  Description: Aws::Ec2:Instace
+
+  Type: String
+
+  Default: m5.2xlarge
+
+ EnumWeb3:
+
+  Description: Aws::Ec2:Instace
+
+  Type: String
+
+  Default: r4.4xlarge
+
+ EnumWeb4:
+
+  Description: Aws::Ec2:Instace
+
+  Type: String
+
+  Default: m4.4xlarge
+
+ EnumWeb5:
+
+  Description: Aws::Ec2:Instace
+
+  Type: String
+
+  Default: i3.2xlarge
+
+ EnumWeb6:
+
+  Description: Aws::Ec2:Instace
+
+  Type: String
+
+  Default: r4.8xlarge
+
+ EnumWeb7:
+
+  Description: Aws::Ec2:Instace
+
+  Type: String
+
+  Default: m5.2xlarge
+
+ EnumWeb8:
+
+  Description: Aws::Ec2:Instace
+
+  Type: String
+
+  Default: m4.2xlarge
+
+ EnumWeb9:
+
+  Description: Aws::Ec2:Instace
+
+  Type: String
+
+  Default: r4.4xlarge
+
+ EnumWeb10:
+
+  Description: Aws::Ec2:Instace
+
+  Type: String
+
+  Default: r4.2xlarge
+
+ WebServerPort:
+
+   Description: TCP/IP port of the web server.
+
+   Type: Number
+
+   Default: 22
+
+ KeyName:
+
+   Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
+
+   Type: 'AWS::EC2::KeyPair::KeyName'
+
+   ConstraintDescription: must be the name of an existing EC2 KeyPair.
+
+ SSHLocation:
+
+   Description: The IP address range that can be used to SSH to the EC2 instances
+
+   Type: String
+
+   MinLength: '9'
+
+   MaxLength: '18'
+
+   Default: 0.0.0.0/16
+
+   AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
+
+   ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
+Mappings:
+
+  AWSInstanceType2Arch:
+
+    r3.2xlarge:
+
+      Arch: '64'
+
+    r3.4xlarge:
+
+      Arch: '64'
+
+    r3.8xlarge:
+
+      Arch: '64'
+
+    r4.2xlarge:
+
+      Arch: '64'
+
+    r4.4xlarge:
+
+      Arch: '64'
+
+    r4.8xlarge:
+
+      Arch: '64'
+
+    i2.2xlarge:
+
+      Arch: '64'
+
+    i2.4xlarge:
+
+      Arch: '64'
+
+    i2.8xlarge:
+
+      Arch: '64'
+
+    i3.2xlarge:
+
+      Arch: '64'
+
+    i3.4xlarge:
+
+      Arch: '64'
+
+    r3.xlarge:
+
+      Arch: '64'
+
+    r4.xlarge:
+
+      Arch: '64'
+
+    m4.xlarge:
+
+      Arch: '64'
+
+    m4.2xlarge:
+
+      Arch: '64'
+
+    m4.4xlarge:
+
+      Arch: '64'
+
+    m4.10xlarge:
+
+      Arch: '64'
+
+    m4.16xlarge:
+
+      Arch: '64'
+
+    m5.2xlarge:
+
+      Arch: '64'
+
+    m5.xlarge:
+
+      Arch: '64'
+
+    m5.4xlarge:
+
+      Arch: '64'
+
+    m3.4xlarge:
+
+      Arch: '64'
+
+  AWSRegionArch2AMI:
+
+    us-east-1:
+
+      '64':  ami-ec9a6d91
+
+    us-east-2:
+
+      '64': ami-a6c5f2c3
+
+    us-west-1:
+
+      '64': ami-d45a50b4
+
+    us-west-2:
+
+      '64':  ami-dc5ad1a4
+
+    ap-south-1:
+
+      '64': ami-fbb2ed94
+
+    ap-northeast-2:
+
+      '64': ami-e049e48e
+
+    ap-southeast-1:
+
+      '64': ami-872862fb
+
+    ap-southeast-2:
+
+      '64': ami-6164a203
+
+    ap-northeast-1:
+
+      '64': ami-9c4000fa
+
+    ca-central-1:
+
+      '64': ami-959d1af1
+
+    eu-central-1:
+
+      '64': ami-0babc764
+
+    eu-west-1:
+
+      '64': ami-70b5f209
+
+    eu-west-2:
+
+      '64': ami-344ca853
+
+    sa-east-1:
+
+      '64': ami-ad6e25c1
+
+Resources:
+
+  WebServerGroup:
+
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+
+    Properties:
+
+      AvailabilityZones: !GetAZs ''
+
+      LaunchConfigurationName: !Ref LaunchConfig
+
+      MinSize: '0'
+
+      MaxSize: '10'
+
+      DesiredCapacity: '10'
+
+    Metadata:
+
+      'AWS::CloudFormation::Designer':
+
+        id: 2c22c000-1096-429b-93f4-a4f12567f456
+
+  LaunchConfig:
+
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+
+    Properties:
+
+      KeyName: !Ref KeyName
+
+      ImageId: !FindInMap 
+
+        - AWSRegionArch2AMI
+
+        - !Ref 'AWS::Region'
+
+        - !FindInMap 
+
+          - AWSInstanceType2Arch
+
+          - !Ref EnumWeb1
+
+          - Arch
+
+      UserData: !Base64 
+
+        Ref: WebServerPort
+
+      SecurityGroups:
+
+        - !Ref InstanceSecurityGroup
+
+      InstanceType: !Ref EnumWeb1
+
+  WebServerGroup2:
+
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+
+    Properties:
+
+      AvailabilityZones: !GetAZs ''
+
+      LaunchConfigurationName: !Ref LaunchConfig2
+
+      MinSize: '0'
+
+      MaxSize: '10'
+
+      DesiredCapacity: '10'
+
+    Metadata:
+
+      'AWS::CloudFormation::Designer':
+
+        id: 2c22c000-1096-429b-93f4-a4f12567f456
+
+  LaunchConfig2:
+
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+
+    Properties:
+
+      KeyName: !Ref KeyName
+
+      ImageId: !FindInMap 
+
+        - AWSRegionArch2AMI
+
+        - !Ref 'AWS::Region'
+
+        - !FindInMap 
+
+          - AWSInstanceType2Arch
+
+          - !Ref EnumWeb1
+
+          - Arch
+
+      UserData: !Base64 
+
+        Ref: WebServerPort
+
+      SecurityGroups:
+
+        - !Ref InstanceSecurityGroup
+
+      InstanceType: !Ref EnumWeb2
+
+  WebServerGroup3:
+
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+
+    Properties:
+
+      AvailabilityZones: !GetAZs ''
+
+      LaunchConfigurationName: !Ref LaunchConfig3
+
+      MinSize: '0'
+
+      MaxSize: '10'
+
+      DesiredCapacity: '10'
+
+    Metadata:
+
+      'AWS::CloudFormation::Designer':
+
+        id: 2c22c000-1096-429b-93f4-a4f12567f456
+
+  LaunchConfig3:
+
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+
+    Properties:
+
+      KeyName: !Ref KeyName
+
+      ImageId: !FindInMap 
+
+        - AWSRegionArch2AMI
+
+        - !Ref 'AWS::Region'
+
+        - !FindInMap 
+
+          - AWSInstanceType2Arch
+
+          - !Ref EnumWeb3
+
+          - Arch
+
+      UserData: !Base64 
+
+        Ref: WebServerPort
+
+      SecurityGroups:
+
+        - !Ref InstanceSecurityGroup
+
+      InstanceType: !Ref EnumWeb3
+
+  WebServerGroup4:
+
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+
+    Properties:
+
+      AvailabilityZones: !GetAZs ''
+
+      LaunchConfigurationName: !Ref LaunchConfig4
+
+      MinSize: '0'
+
+      MaxSize: '10'
+
+      DesiredCapacity: '10'
+
+    Metadata:
+
+      'AWS::CloudFormation::Designer':
+
+        id: 2c22c000-1096-429b-93f4-a4f12567f456
+
+  LaunchConfig4:
+
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+
+    Properties:
+
+      KeyName: !Ref KeyName
+
+      ImageId: !FindInMap 
+
+        - AWSRegionArch2AMI
+
+        - !Ref 'AWS::Region'
+
+        - !FindInMap 
+
+          - AWSInstanceType2Arch
+
+          - !Ref EnumWeb4
+
+          - Arch
+
+      UserData: !Base64 
+
+        Ref: WebServerPort
+
+      SecurityGroups:
+
+        - !Ref InstanceSecurityGroup
+
+      InstanceType: !Ref EnumWeb4
+
+  WebServerGroup5:
+
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+
+    Properties:
+
+      AvailabilityZones: !GetAZs ''
+
+      LaunchConfigurationName: !Ref LaunchConfig5
+
+      MinSize: '0'
+
+      MaxSize: '10'
+
+      DesiredCapacity: '10'
+
+    Metadata:
+
+      'AWS::CloudFormation::Designer':
+
+        id: 2c22c000-1096-429b-93f4-a4f12567f456
+
+  LaunchConfig5:
+
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+
+    Properties:
+
+      KeyName: !Ref KeyName
+
+      ImageId: !FindInMap 
+
+        - AWSRegionArch2AMI
+
+        - !Ref 'AWS::Region'
+
+        - !FindInMap 
+
+          - AWSInstanceType2Arch
+
+          - !Ref EnumWeb5
+
+          - Arch
+
+      UserData: !Base64 
+
+        Ref: WebServerPort
+
+      SecurityGroups:
+
+        - !Ref InstanceSecurityGroup
+
+      InstanceType: !Ref EnumWeb5
+
+  WebServerGroup6:
+
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+
+    Properties:
+
+      AvailabilityZones: !GetAZs ''
+
+      LaunchConfigurationName: !Ref LaunchConfig6
+
+      MinSize: '0'
+
+      MaxSize: '10'
+
+      DesiredCapacity: '10'
+
+    Metadata:
+
+      'AWS::CloudFormation::Designer':
+
+        id: 2c22c000-1096-429b-93f4-a4f12567f456
+
+  LaunchConfig6:
+
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+
+    Properties:
+
+      KeyName: !Ref KeyName
+
+      ImageId: !FindInMap 
+
+        - AWSRegionArch2AMI
+
+        - !Ref 'AWS::Region'
+
+        - !FindInMap 
+
+          - AWSInstanceType2Arch
+
+          - !Ref EnumWeb6
+
+          - Arch
+
+      UserData: !Base64 
+
+        Ref: WebServerPort
+
+      SecurityGroups:
+
+        - !Ref InstanceSecurityGroup
+
+      InstanceType: !Ref EnumWeb6
+
+  WebServerGroup7:
+
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+
+    Properties:
+
+      AvailabilityZones: !GetAZs ''
+
+      LaunchConfigurationName: !Ref LaunchConfig7
+
+      MinSize: '0'
+
+      MaxSize: '10'
+
+      DesiredCapacity: '10'
+
+    Metadata:
+
+      'AWS::CloudFormation::Designer':
+
+        id: 2c22c000-1096-429b-93f4-a4f12567f456
+
+  LaunchConfig7:
+
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+
+    Properties:
+
+      KeyName: !Ref KeyName
+
+      ImageId: !FindInMap 
+
+        - AWSRegionArch2AMI
+
+        - !Ref 'AWS::Region'
+
+        - !FindInMap 
+
+          - AWSInstanceType2Arch
+
+          - !Ref EnumWeb7
+
+          - Arch
+
+      UserData: !Base64 
+
+        Ref: WebServerPort
+
+      SecurityGroups:
+
+        - !Ref InstanceSecurityGroup
+
+      InstanceType: !Ref EnumWeb7
+
+  WebServerGroup8:
+
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+
+    Properties:
+
+      AvailabilityZones: !GetAZs ''
+
+      LaunchConfigurationName: !Ref LaunchConfig8
+
+      MinSize: '0'
+
+      MaxSize: '10'
+
+      DesiredCapacity: '10'
+
+    Metadata:
+
+      'AWS::CloudFormation::Designer':
+
+        id: 2c22c000-1096-429b-93f4-a4f12567f456
+
+  LaunchConfig8:
+
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+
+    Properties:
+
+      KeyName: !Ref KeyName
+
+      ImageId: !FindInMap 
+
+        - AWSRegionArch2AMI
+
+        - !Ref 'AWS::Region'
+
+        - !FindInMap 
+
+          - AWSInstanceType2Arch
+
+          - !Ref EnumWeb8
+
+          - Arch
+
+      UserData: !Base64 
+
+        Ref: WebServerPort
+
+      SecurityGroups:
+
+        - !Ref InstanceSecurityGroup
+
+      InstanceType: !Ref EnumWeb8
+
+  WebServerGroup9:
+
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+
+    Properties:
+
+      AvailabilityZones: !GetAZs ''
+
+      LaunchConfigurationName: !Ref LaunchConfig9
+
+      MinSize: '0'
+
+      MaxSize: '10'
+
+      DesiredCapacity: '10'
+
+    Metadata:
+
+      'AWS::CloudFormation::Designer':
+
+        id: 2c22c000-1096-429b-93f4-a4f12567f456
+
+  LaunchConfig9:
+
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+
+    Properties:
+
+      KeyName: !Ref KeyName
+
+      ImageId: !FindInMap 
+
+        - AWSRegionArch2AMI
+
+        - !Ref 'AWS::Region'
+
+        - !FindInMap 
+
+          - AWSInstanceType2Arch
+
+          - !Ref EnumWeb9
+
+          - Arch
+
+      UserData: !Base64 
+
+        Ref: WebServerPort
+
+      SecurityGroups:
+
+        - !Ref InstanceSecurityGroup
+
+      InstanceType: !Ref EnumWeb9
+
+  WebServerGroup10:
+
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+
+    Properties:
+
+      AvailabilityZones: !GetAZs ''
+
+      LaunchConfigurationName: !Ref LaunchConfig10
+
+      MinSize: '0'
+
+      MaxSize: '10'
+
+      DesiredCapacity: '10'
+
+    Metadata:
+
+      'AWS::CloudFormation::Designer':
+
+        id: 2c22c000-1096-429b-93f4-a4f12567f456
+
+  LaunchConfig10:
+
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+
+    Properties:
+
+      KeyName: !Ref KeyName
+
+      ImageId: !FindInMap 
+
+        - AWSRegionArch2AMI
+
+        - !Ref 'AWS::Region'
+
+        - !FindInMap 
+
+          - AWSInstanceType2Arch
+
+          - !Ref EnumWeb10
+
+          - Arch
+
+      UserData: !Base64 
+
+        Ref: WebServerPort
+
+      SecurityGroups:
+
+        - !Ref InstanceSecurityGroup
+
+      InstanceType: !Ref EnumWeb10
+
+    Metadata:
+
+      'AWS::CloudFormation::Designer':
+
+        id: efd0867f-8b9e-4354-9eb2-613a187e6747
+
+  InstanceSecurityGroup:
+
+    Type: 'AWS::EC2::SecurityGroup'
+
+    Properties:
+
+      GroupDescription: Enable SSH access and HTTP from the load balancer only
+
+      SecurityGroupIngress:
+
+        - IpProtocol: tcp
+
+          FromPort: '22'
+
+          ToPort: '22'
+
+          CidrIp: !Ref SSHLocation
+
+        - IpProtocol: tcp
+
+          FromPort: !Ref WebServerPort
+
+          ToPort: !Ref WebServerPort
+
+    Metadata:
+
+      'AWS::CloudFormation::Designer':
+
+        id: 84d912bc-c566-4476-9d65-3baf2390e6a1
