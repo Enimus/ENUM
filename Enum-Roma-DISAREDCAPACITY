@@ -1,461 +1,574 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: >-
-  AWS CloudFormation Sample Template AutoScalingMultiAZSample: Create a
-  multi-az, load balanced and Auto Scaled sample web site running on an Apache
-  Web Server with PHP. The application is configured to span all Availability
-  Zones in the region and is Auto-Scaled based on the CPU utilization of the web
-  servers. The instances are load balanced with a simple health check against
-  the default web page. The web site is available on port 80, however, the
-  instances can be configured to listen on any port (8888 by default).
-  **WARNING** This template creates one or more Amazon EC2 instances and an
-  Elastic Load Balancer. You will be billed for the AWS resources used if you
-  create a stack from this template.
+Description: 
+ --[[
+   __|   \ | _ _|   \  |  |  |   __| 
+   _|   .  |   |   |\/ |  |  | \__ \ 
+  ___| _|\_| ___| _|  _| \__/  ____/ 
+                                     
+ --]]
 Parameters:
- EnumWeb1:
-  Description: Aws::Ec2:Instace
-  Type: String
-  Default: m5.4xlarge
- EnumWeb2:
-  Description: Aws::Ec2:Instace
-  Type: String
-  Default: m5.2xlarge
- EnumWeb3:
-  Description: Aws::Ec2:Instace
-  Type: String
-  Default: r4.4xlarge
- EnumWeb4:
-  Description: Aws::Ec2:Instace
-  Type: String
-  Default: m4.4xlarge
- EnumWeb5:
-  Description: Aws::Ec2:Instace
-  Type: String
-  Default: i3.2xlarge
- EnumWeb6:
-  Description: Aws::Ec2:Instace
-  Type: String
-  Default: r4.8xlarge
- EnumWeb7:
-  Description: Aws::Ec2:Instace
-  Type: String
-  Default: m5.2xlarge
- EnumWeb8:
-  Description: Aws::Ec2:Instace
-  Type: String
-  Default: m4.2xlarge
- EnumWeb9:
-  Description: Aws::Ec2:Instace
-  Type: String
-  Default: r4.4xlarge
- EnumWeb10:
-  Description: Aws::Ec2:Instace
-  Type: String
-  Default: r4.2xlarge
- WebServerPort:
-   Description: TCP/IP port of the web server.
-   Type: Number
-   Default: 22
- KeyName:
-   Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
-   Type: 'AWS::EC2::KeyPair::KeyName'
-   ConstraintDescription: must be the name of an existing EC2 KeyPair.
- SSHLocation:
-   Description: The IP address range that can be used to SSH to the EC2 instances
+
+  EnumWeb1:
+
+   Description: Aws::Ec2:Instace
+
    Type: String
-   MinLength: '9'
-   MaxLength: '18'
-   Default: 0.0.0.0/16
-   AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
-   ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
+   Default: m4.xlarge
+
+  EnumWeb2:
+
+   Description: Aws::Ec2:Instace
+
+   Type: String
+
+   Default: m3.2xlarge
+
+  EnumWeb3:
+
+   Description: Aws::Ec2:Instace
+
+   Type: String
+
+   Default: r4.4xlarge
+
+  EnumWeb4:
+
+   Description: Aws::Ec2:Instace
+
+   Type: String
+
+   Default: m4.xlarge
+
+  EnumWeb5:
+
+   Description: Aws::Ec2:Instace
+
+   Type: String
+
+   Default: i3.2xlarge
+
+  EnumWeb6:
+
+   Description: Aws::Ec2:Instace
+
+   Type: String
+
+   Default: r4.2xlarge
+
+  EnumWeb7:
+
+   Description: Aws::Ec2:Instace
+
+   Type: String
+
+   Default: m4.xlarge
+
+  EnumWeb8:
+
+   Description: Aws::Ec2:Instace
+
+   Type: String
+
+   Default: m4.2xlarge
+
+  EnumWeb9:
+
+   Description: Aws::Ec2:Instace
+
+   Type: String
+
+   Default: r4.xlarge
+
+  EnumWeb10:
+
+   Description: Aws::Ec2:Instace
+
+   Type: String
+
+   Default: r4.2xlarge
+
+  WebServerPort:
+
+    Description: TCP/IP port of the web server.
+
+    Type: Number
+
+    Default: 22
+
+  Username:
+    Description: Username to log in to CloudFormer
+    Type: String
+  Password:
+    Description: Password to log in to CloudFormer
+    Type: String
+    NoEcho: 'true'
+  VPCSelection:
+    Description: >-
+      This setting will control if the Cloudformer Web server will launch in the
+      default VPC or if a new VPC will be created, or if you wish to launch into
+      an existing non-default VPC.
+    Type: String
+    Default: CreateNewVPC
+    AllowedValues:
+      - Default
+      - CreateNewVPC
+    ConstraintDescription: must be either Default or CreateNewVPC
+Conditions:
+  DefaultVPC: !Equals 
+    - !Ref VPCSelection
+    - Default
+  CreateNewVPC: !Equals 
+    - !Ref VPCSelection
+    - CreateNewVPC
+
 Mappings:
+
+  Region2Examples:
+    us-east-1:
+      Examples: 'https://s3.amazonaws.com/cloudformation-examples-us-east-1'
+    us-west-2:
+      Examples: 'https://s3-us-west-2.amazonaws.com/cloudformation-examples-us-west-2'
+    us-west-1:
+      Examples: 'https://s3-us-west-1.amazonaws.com/cloudformation-examples-us-west-1'
+    eu-west-1:
+      Examples: 'https://s3-eu-west-1.amazonaws.com/cloudformation-examples-eu-west-1'
+    eu-central-1:
+      Examples: >-
+        https://s3-eu-central-1.amazonaws.com/cloudformation-examples-eu-central-1
+    ap-southeast-1:
+      Examples: >-
+        https://s3-ap-southeast-1.amazonaws.com/cloudformation-examples-ap-southeast-1
+    ap-northeast-1:
+      Examples: >-
+        https://s3-ap-northeast-1.amazonaws.com/cloudformation-examples-ap-northeast-1
+    ap-southeast-2:
+      Examples: >-
+        https://s3-ap-southeast-2.amazonaws.com/cloudformation-examples-ap-southeast-2
+    ap-northeast-2:
+      Examples: >-
+        https://s3-ap-northeast-2.amazonaws.com/cloudformation-examples-ap-northeast-2
+    ap-northeast-3:
+      Examples: >-
+        https://s3-ap-northeast-3.amazonaws.com/cloudformation-examples-ap-northeast-3
+    ap-south-1:
+      Examples: 'https://s3-ap-south-1.amazonaws.com/cloudformation-examples-ap-south-1'
+    us-east-2:
+      Examples: 'https://s3-us-east-2.amazonaws.com/cloudformation-examples-us-east-2'
+    sa-east-1:
+      Examples: 'https://s3-sa-east-1.amazonaws.com/cloudformation-examples-sa-east-1'
+    cn-north-1:
+      Examples: >-
+        https://s3.cn-north-1.amazonaws.com.cn/cloudformation-examples-cn-north-1
+    cn-northwest-1:
+      Examples: >-
+        https://s3.cn-northwest-1.amazonaws.com.cn/cloudformation-examples-cn-northwest-1
+    ca-central-1:
+      Examples: >-
+        https://s3-ca-central-1.amazonaws.com/cloudformation-examples-ca-central-1
+    eu-west-2:
+      Examples: 'https://s3-eu-west-2.amazonaws.com/cloudformation-examples-eu-west-2'
+    eu-west-3:
+      Examples: 'https://s3-eu-west-3.amazonaws.com/cloudformation-examples-eu-west-3'
+  Region2Principal:
+    us-east-1:
+      EC2Principal: ec2.amazonaws.com
+      OpsWorksPrincipal: opsworks.amazonaws.com
+    us-west-2:
+      EC2Principal: ec2.amazonaws.com
+      OpsWorksPrincipal: opsworks.amazonaws.com
+    us-west-1:
+      EC2Principal: ec2.amazonaws.com
+      OpsWorksPrincipal: opsworks.amazonaws.com
+    eu-west-1:
+      EC2Principal: ec2.amazonaws.com
+      OpsWorksPrincipal: opsworks.amazonaws.com
+    ap-southeast-1:
+      EC2Principal: ec2.amazonaws.com
+      OpsWorksPrincipal: opsworks.amazonaws.com
+    ap-northeast-1:
+      EC2Principal: ec2.amazonaws.com
+      OpsWorksPrincipal: opsworks.amazonaws.com
+    ap-southeast-2:
+      EC2Principal: ec2.amazonaws.com
+      OpsWorksPrincipal: opsworks.amazonaws.com
+    ap-northeast-2:
+      EC2Principal: ec2.amazonaws.com
+      OpsWorksPrincipal: opsworks.amazonaws.com
+    ap-northeast-3:
+      EC2Principal: ec2.amazonaws.com
+      OpsWorksPrincipal: opsworks.amazonaws.com
+    ap-south-1:
+      EC2Principal: ec2.amazonaws.com
+      OpsWorksPrincipal: opsworks.amazonaws.com
+    us-east-2:
+      EC2Principal: ec2.amazonaws.com
+      OpsWorksPrincipal: opsworks.amazonaws.com
+    sa-east-1:
+      EC2Principal: ec2.amazonaws.com
+      OpsWorksPrincipal: opsworks.amazonaws.com
+    cn-north-1:
+      EC2Principal: ec2.amazonaws.com.cn
+      OpsWorksPrincipal: opsworks.amazonaws.com.cn
+    cn-northwest-1:
+      EC2Principal: ec2.amazonaws.com.cn
+      OpsWorksPrincipal: opsworks.amazonaws.com.cn
+    eu-central-1:
+      EC2Principal: ec2.amazonaws.com
+      OpsWorksPrincipal: opsworks.amazonaws.com
+    eu-west-2:
+      EC2Principal: ec2.amazonaws.com
+      OpsWorksPrincipal: opsworks.amazonaws.com
+    ca-central-1:
+      EC2Principal: ec2.amazonaws.com
+      OpsWorksPrincipal: opsworks.amazonaws.com
+    eu-west-3:
+      EC2Principal: ec2.amazonaws.com
+      OpsWorksPrincipal: opsworks.amazonaws.com
   AWSInstanceType2Arch:
+    t1.micro:
+      Arch: PV64
+    t2.nano:
+      Arch: HVM64
+    t2.micro:
+      Arch: HVM64
+    t2.small:
+      Arch: HVM64
+    t2.medium:
+      Arch: HVM64
+    t2.large:
+      Arch: HVM64
+    m1.small:
+      Arch: PV64
+    m.medium:
+      Arch: PV64
+    m1.large:
+      Arch: PV64
+    m3.xlarge:
+      Arch: PV64
+    m3.2xlarge:
+      Arch: PV64
     r3.2xlarge:
-      Arch: '64'
+      Arch: PV64
     r3.4xlarge:
-      Arch: '64'
+      Arch: PV64
     r3.8xlarge:
-      Arch: '64'
+      Arch: HVM64
     r4.2xlarge:
-      Arch: '64'
-    r4.4xlarge:
-      Arch: '64'
+      Arch: HVM64
     r4.8xlarge:
-      Arch: '64'
-    i2.2xlarge:
-      Arch: '64'
-    i2.4xlarge:
-      Arch: '64'
-    i2.8xlarge:
-      Arch: '64'
-    i3.2xlarge:
-      Arch: '64'
-    i3.4xlarge:
-      Arch: '64'
-    r3.xlarge:
-      Arch: '64'
-    r4.xlarge:
-      Arch: '64'
+      Arch: HVM64
+    r4.4xlarge:
+      Arch: HVM64
+    m4.large:
+      Arch: HVM64
     m4.xlarge:
-      Arch: '64'
+      Arch: HVM64
     m4.2xlarge:
-      Arch: '64'
+      Arch: HVM64
     m4.4xlarge:
-      Arch: '64'
+      Arch: HVM64
     m4.10xlarge:
-      Arch: '64'
-    m4.16xlarge:
-      Arch: '64'
-    m5.2xlarge:
-      Arch: '64'
-    m5.xlarge:
-      Arch: '64'
-    m5.4xlarge:
-      Arch: '64'
-    m3.4xlarge:
-      Arch: '64'
+      Arch: HVM64
+    c1.medium:
+      Arch: PV64
+    i2.2xlarge:
+      Arch: PV64
+    i2.8xlarge:
+      Arch: HVM64
+    i2.4xlarge:
+      Arch: HVM64
+    c3.2xlarge:
+      Arch: HVM64
+    i3.4xlarge:
+      Arch: HVM64
+    i3.2xlarge:
+      Arch: HVM64
+    m3.xlarge:
+      Arch: HVM64
+    m3.2xlarge:
+      Arch: HVM64
+    c4.2xlarge:
+      Arch: HVM64
+    c4.4xlarge:
+      Arch: HVM64
+    c4.8xlarge:
+      Arch: HVM64
+    g2.2xlarge:
+      Arch: HVMG2
+    g2.8xlarge:
+      Arch: HVMG2
+    r3.large:
+      Arch: HVM64
+    r3.xlarge:
+      Arch: HVM64
+    r3.2xlarge:
+      Arch: HVM64
+    r3.4xlarge:
+      Arch: HVM64
+    r3.8xlarge:
+      Arch: HVM64
+    i2.xlarge:
+      Arch: HVM64
+    i2.2xlarge:
+      Arch: HVM64
+    i2.4xlarge:
+      Arch: HVM64
+    i2.8xlarge:
+      Arch: HVM64
+    d2.xlarge:
+      Arch: HVM64
+    d2.2xlarge:
+      Arch: HVM64
+    d2.4xlarge:
+      Arch: HVM64
+    d2.8xlarge:
+      Arch: HVM64
+    hi1.4xlarge:
+      Arch: HVM64
+    hs1.8xlarge:
+      Arch: HVM64
+    cr1.8xlarge:
+      Arch: HVM64
+    cc2.8xlarge:
+      Arch: HVM64
+  AWSInstanceType2NATArch:
+    t1.micro:
+      Arch: NATPV64
+    t2.nano:
+      Arch: NATHVM64
+    t2.micro:
+      Arch: NATHVM64
+    t2.small:
+      Arch: NATHVM64
+    t2.medium:
+      Arch: NATHVM64
+    t2.large:
+      Arch: NATHVM64
+    m1.small:
+      Arch: NATPV64
+    m3.xlarge:
+      Arch: NATPV64
+    m1.large:
+      Arch: NATPV64
+    m3.2xlarge:
+      Arch: NATPV64
+    m2.xlarge:
+      Arch: NATPV64
+    m2.2xlarge:
+      Arch: NATPV64
+    m2.4xlarge:
+      Arch: NATPV64
+    m3.medium:
+      Arch: NATHVM64
+    m3.large:
+      Arch: NATHVM64
+    m3.xlarge:
+      Arch: NATHVM64
+    m3.2xlarge:
+      Arch: NATHVM64
+    m4.large:
+      Arch: NATHVM64
+    m4.xlarge:
+      Arch: NATHVM64
+    m4.2xlarge:
+      Arch: NATHVM64
+    m4.4xlarge:
+      Arch: NATHVM64
+    m4.10xlarge:
+      Arch: NATHVM64
+    c1.medium:
+      Arch: NATPV64
+    c1.xlarge:
+      Arch: NATPV64
+    c3.large:
+      Arch: NATHVM64
+    c3.xlarge:
+      Arch: NATHVM64
+    c3.2xlarge:
+      Arch: NATHVM64
+    c3.4xlarge:
+      Arch: NATHVM64
+    c3.8xlarge:
+      Arch: NATHVM64
+    c4.large:
+      Arch: NATHVM64
+    c4.xlarge:
+      Arch: NATHVM64
+    c4.2xlarge:
+      Arch: NATHVM64
+    c4.4xlarge:
+      Arch: NATHVM64
+    c4.8xlarge:
+      Arch: NATHVM64
+    g2.2xlarge:
+      Arch: NATHVMG2
+    g2.8xlarge:
+      Arch: NATHVMG2
+    r3.large:
+      Arch: NATHVM64
+    r3.xlarge:
+      Arch: NATHVM64
+    r3.2xlarge:
+      Arch: NATHVM64
+    r3.4xlarge:
+      Arch: NATHVM64
+    r3.8xlarge:
+      Arch: NATHVM64
+    i2.xlarge:
+      Arch: NATHVM64
+    i2.2xlarge:
+      Arch: NATHVM64
+    i2.4xlarge:
+      Arch: NATHVM64
+    i2.8xlarge:
+      Arch: NATHVM64
+    d2.xlarge:
+      Arch: NATHVM64
+    d2.2xlarge:
+      Arch: NATHVM64
+    d2.4xlarge:
+      Arch: NATHVM64
+    d2.8xlarge:
+      Arch: NATHVM64
+    hi1.4xlarge:
+      Arch: NATHVM64
+    hs1.8xlarge:
+      Arch: NATHVM64
+    cr1.8xlarge:
+      Arch: NATHVM64
+    cc2.8xlarge:
+      Arch: NATHVM64
   AWSRegionArch2AMI:
     us-east-1:
-      '64': ami-0a29159a2836226ac
-    us-east-2:
-      '64': ami-031a4406bc140c17a
-    us-west-1:
-      '64': ami-0bf2ec4eb3efcff66
+       PV64: ami-08ae4e9db257b9aeb
+       HVM64: ami-08ae4e9db257b9aeb
+       HVMG2: ami-08ae4e9db257b9aeb
     us-west-2:
-      '64': ami-0cfcb3ca4e288d43e
-    ca-central-1:
-      '64': ami-0c5541a5eff1ae777
+       PV64: ami-051439e39f3ac3a10
+       HVM64: ami-051439e39f3ac3a10
+       HVMG2: ami-051439e39f3ac3a10
+    us-west-1:
+       PV64: ami-059f7b46119df7cff
+       HVM64: ami-059f7b46119df7cff
+       HVMG2: ami-059f7b46119df7cff
     eu-west-1:
-      '64': ami-0a5e337284856aa7c
+       PV64: ami-0373fccb285abf88b
+       HVM64: ami-0373fccb285abf88b
+       HVMG2: ami-0373fccb285abf88b
     eu-west-2:
-      '64': ami-0f29dcd3bd0b0937a
+       PV64: ami-07f53027e1c5c6e32
+       HVM64: ami-07f53027e1c5c6e32
+       HVMG2: ami-07f53027e1c5c6e32
+    eu-west-3:
+       PV64: ami-0d33a81d944d0bb47
+       HVM64: ami-0d33a81d944d0bb47
+       HVMG2: ami-0d33a81d944d0bb47
     eu-central-1:
-      '64': ami-0150e2d7f9907d25a
-    ap-south-1:
-      '64': ami-04b8811f37754a184
-    ap-southeast-2:
-      '64': ami-03d0eb96e30a936af
+       PV64: ami-0610af7af614001be
+       HVM64: ami-0610af7af614001be
+       HVMG2: ami-0610af7af614001be
     ap-northeast-1:
-      '64': ami-0c18b713d365c09e2
+       PV64: ami-003e99891cdd7c7ee
+       HVM64: ami-003e99891cdd7c7ee
+       HVMG2: ami-003e99891cdd7c7ee
     ap-northeast-2:
-      '64': ami-0955bcf5e3052682e
+       PV64: ami-0b97bf99b1c041574
+       HVM64: ami-0b97bf99b1c041574
+       HVMG2: ami-0b97bf99b1c041574
+    ap-northeast-3:
+       PV64: NOT_SUPPORTED
+       HVM64: NOT_SUPPORTED
+       HVMG2: NOT_SUPPORTED
     ap-southeast-1:
-      '64': ami-0ac40bb10699dfc91
+       PV64: ami-063dc8c653086e595
+       HVM64: ami-063dc8c653086e595
+       HVMG2: ami-063dc8c653086e595
+    ap-southeast-2:
+       PV64: ami-0373fccb285abf88b
+       HVM64: ami-0373fccb285abf88b
+       HVMG2: ami-0373fccb285abf88b
+    ap-south-1:
+       PV64: ami-056eed61617c29a02
+       HVM64: ami-056eed61617c29a02
+       HVMG2: ami-056eed61617c29a02
+    us-east-2:
+       PV64: ami-0c4cc3e0a930883c9
+       HVM64: ami-0c4cc3e0a930883c9
+       HVMG2: ami-0c4cc3e0a930883c9
+    ca-central-1:
+       PV64: ami-0931f178b6c6734d8
+       HVM64: ami-0931f178b6c6734d8
+       HVMG2: ami-0931f178b6c6734d8
     sa-east-1:
-      '64': ami-024b4b70efe1c7a1c
+       PV64: ami-048978a5c4ed7f0c8
+       HVM64: ami-048978a5c4ed7f0c8
+       HVMG2: ami-048978a5c4ed7f0c8
 Resources:
   WebServerGroup:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
+
     Properties:
+
       AvailabilityZones: !GetAZs ''
+
       LaunchConfigurationName: !Ref LaunchConfig
+
       MinSize: '0'
-      MaxSize: '10'
-      DesiredCapacity: '10'
-      LoadBalancerNames:
-        - !Ref ElasticLoadBalancer
+
+      MaxSize: '2'
+
+      DesiredCapacity: '1'
+
     Metadata:
+
       'AWS::CloudFormation::Designer':
+
         id: 2c22c000-1096-429b-93f4-a4f12567f456
+
   LaunchConfig:
+
     Type: 'AWS::AutoScaling::LaunchConfiguration'
+
     Properties:
-      KeyName: !Ref KeyName
+    
       ImageId: !FindInMap 
+
         - AWSRegionArch2AMI
+
         - !Ref 'AWS::Region'
+
         - !FindInMap 
+
           - AWSInstanceType2Arch
+
           - !Ref EnumWeb1
+
           - Arch
+
       UserData: !Base64 
+
         Ref: WebServerPort
+
       SecurityGroups:
+
         - !Ref InstanceSecurityGroup
+
       InstanceType: !Ref EnumWeb1
-  WebServerGroup2:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
-    Properties:
-      AvailabilityZones: !GetAZs ''
-      LaunchConfigurationName: !Ref LaunchConfig2
-      MinSize: '0'
-      MaxSize: '10'
-      DesiredCapacity: '10'
-      LoadBalancerNames:
-        - !Ref ElasticLoadBalancer
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 2c22c000-1096-429b-93f4-a4f12567f456
-  LaunchConfig2:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
-    Properties:
-      KeyName: !Ref KeyName
-      ImageId: !FindInMap 
-        - AWSRegionArch2AMI
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref EnumWeb1
-          - Arch
-      UserData: !Base64 
-        Ref: WebServerPort
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
-      InstanceType: !Ref EnumWeb2
-  WebServerGroup3:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
-    Properties:
-      AvailabilityZones: !GetAZs ''
-      LaunchConfigurationName: !Ref LaunchConfig3
-      MinSize: '0'
-      MaxSize: '10'
-      DesiredCapacity: '10'
-      LoadBalancerNames:
-        - !Ref ElasticLoadBalancer
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 2c22c000-1096-429b-93f4-a4f12567f456
-  LaunchConfig3:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
-    Properties:
-      KeyName: !Ref KeyName
-      ImageId: !FindInMap 
-        - AWSRegionArch2AMI
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref EnumWeb3
-          - Arch
-      UserData: !Base64 
-        Ref: WebServerPort
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
-      InstanceType: !Ref EnumWeb3
-  WebServerGroup4:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
-    Properties:
-      AvailabilityZones: !GetAZs ''
-      LaunchConfigurationName: !Ref LaunchConfig4
-      MinSize: '0'
-      MaxSize: '10'
-      DesiredCapacity: '10'
-      LoadBalancerNames:
-        - !Ref ElasticLoadBalancer
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 2c22c000-1096-429b-93f4-a4f12567f456
-  LaunchConfig4:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
-    Properties:
-      KeyName: !Ref KeyName
-      ImageId: !FindInMap 
-        - AWSRegionArch2AMI
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref EnumWeb4
-          - Arch
-      UserData: !Base64 
-        Ref: WebServerPort
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
-      InstanceType: !Ref EnumWeb4
-  WebServerGroup5:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
-    Properties:
-      AvailabilityZones: !GetAZs ''
-      LaunchConfigurationName: !Ref LaunchConfig5
-      MinSize: '0'
-      MaxSize: '10'
-      DesiredCapacity: '10'
-      LoadBalancerNames:
-        - !Ref ElasticLoadBalancer
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 2c22c000-1096-429b-93f4-a4f12567f456
-  LaunchConfig5:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
-    Properties:
-      KeyName: !Ref KeyName
-      ImageId: !FindInMap 
-        - AWSRegionArch2AMI
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref EnumWeb5
-          - Arch
-      UserData: !Base64 
-        Ref: WebServerPort
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
-      InstanceType: !Ref EnumWeb5
-  WebServerGroup6:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
-    Properties:
-      AvailabilityZones: !GetAZs ''
-      LaunchConfigurationName: !Ref LaunchConfig6
-      MinSize: '0'
-      MaxSize: '10'
-      DesiredCapacity: '10'
-      LoadBalancerNames:
-        - !Ref ElasticLoadBalancer
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 2c22c000-1096-429b-93f4-a4f12567f456
-  LaunchConfig6:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
-    Properties:
-      KeyName: !Ref KeyName
-      ImageId: !FindInMap 
-        - AWSRegionArch2AMI
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref EnumWeb6
-          - Arch
-      UserData: !Base64 
-        Ref: WebServerPort
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
-      InstanceType: !Ref EnumWeb6
-  WebServerGroup7:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
-    Properties:
-      AvailabilityZones: !GetAZs ''
-      LaunchConfigurationName: !Ref LaunchConfig7
-      MinSize: '0'
-      MaxSize: '10'
-      DesiredCapacity: '10'
-      LoadBalancerNames:
-        - !Ref ElasticLoadBalancer
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 2c22c000-1096-429b-93f4-a4f12567f456
-  LaunchConfig7:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
-    Properties:
-      KeyName: !Ref KeyName
-      ImageId: !FindInMap 
-        - AWSRegionArch2AMI
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref EnumWeb7
-          - Arch
-      UserData: !Base64 
-        Ref: WebServerPort
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
-      InstanceType: !Ref EnumWeb7
-  WebServerGroup8:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
-    Properties:
-      AvailabilityZones: !GetAZs ''
-      LaunchConfigurationName: !Ref LaunchConfig8
-      MinSize: '0'
-      MaxSize: '10'
-      DesiredCapacity: '10'
-      LoadBalancerNames:
-        - !Ref ElasticLoadBalancer
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 2c22c000-1096-429b-93f4-a4f12567f456
-  LaunchConfig8:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
-    Properties:
-      KeyName: !Ref KeyName
-      ImageId: !FindInMap 
-        - AWSRegionArch2AMI
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref EnumWeb8
-          - Arch
-      UserData: !Base64 
-        Ref: WebServerPort
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
-      InstanceType: !Ref EnumWeb8
-  WebServerGroup9:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
-    Properties:
-      AvailabilityZones: !GetAZs ''
-      LaunchConfigurationName: !Ref LaunchConfig9
-      MinSize: '0'
-      MaxSize: '10'
-      DesiredCapacity: '10'
-      LoadBalancerNames:
-        - !Ref ElasticLoadBalancer
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 2c22c000-1096-429b-93f4-a4f12567f456
-  LaunchConfig9:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
-    Properties:
-      KeyName: !Ref KeyName
-      ImageId: !FindInMap 
-        - AWSRegionArch2AMI
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref EnumWeb9
-          - Arch
-      UserData: !Base64 
-        Ref: WebServerPort
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
-      InstanceType: !Ref EnumWeb9
-  WebServerGroup10:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
-    Properties:
-      AvailabilityZones: !GetAZs ''
-      LaunchConfigurationName: !Ref LaunchConfig10
-      MinSize: '0'
-      MaxSize: '10'
-      DesiredCapacity: '10'
-      LoadBalancerNames:
-        - !Ref ElasticLoadBalancer
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 2c22c000-1096-429b-93f4-a4f12567f456
-  LaunchConfig10:
-    Type: 'AWS::AutoScaling::LaunchConfiguration'
-    Properties:
-      KeyName: !Ref KeyName
-      ImageId: !FindInMap 
-        - AWSRegionArch2AMI
-        - !Ref 'AWS::Region'
-        - !FindInMap 
-          - AWSInstanceType2Arch
-          - !Ref EnumWeb10
-          - Arch
-      UserData: !Base64 
-        Ref: WebServerPort
-      SecurityGroups:
-        - !Ref InstanceSecurityGroup
-      InstanceType: !Ref EnumWeb10
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: efd0867f-8b9e-4354-9eb2-613a187e6747
-  WebServer2ScaleUpPolicy:
+  WebServerScaleUpPolicy:
     Type: 'AWS::AutoScaling::ScalingPolicy'
     Properties:
       AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup2
-      Cooldown: '300'
-      ScalingAdjustment: '2'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
-  WebServer2ScaleDownPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup2
+      AutoScalingGroupName: !Ref WebServerGroup
       Cooldown: '300'
       ScalingAdjustment: '1'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 71e8c4ab-c777-43f2-93eb-741d2987421a
+  WebServerScaleDownPolicy:
+    Type: 'AWS::AutoScaling::ScalingPolicy'
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref WebServerGroup
+      Cooldown: '300'
+      ScalingAdjustment: '-1'
   CPUAlarmHigh:
     Type: 'AWS::CloudWatch::Alarm'
     Properties:
@@ -464,18 +577,95 @@ Resources:
       Namespace: AWS/EC2
       Statistic: Average
       Period: '300'
-      EvaluationPeriods: '2'
+      EvaluationPeriods: '5'
       Threshold: '70'
       AlarmActions:
-        - !Ref WebServer2ScaleUpPolic4
+        - !Ref WebServerScaleUpPolicy
       Dimensions:
         - Name: AutoScalingGroupName
           Value: !Ref WebServerGroup
       ComparisonOperator: GreaterThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a08fa081-f4fe-4e1b-9e35-2afacc5046e0
   CPUAlarmLow:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: '300'
+      EvaluationPeriods: '5'
+      Threshold: '70'
+      AlarmActions:
+        - !Ref WebServerScaleDownPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref WebServerGroup
+      ComparisonOperator: LessThanThreshold
+  WebServerGroup2:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+
+    Properties:
+
+      AvailabilityZones: !GetAZs ''
+
+      LaunchConfigurationName: !Ref LaunchConfig2
+
+      MinSize: '0'
+
+      MaxSize: '5'
+
+      DesiredCapacity: '1'
+
+    Metadata:
+
+      'AWS::CloudFormation::Designer':
+
+        id: 2c22c000-1096-429b-93f4-a4f12567f456
+
+  LaunchConfig2:
+
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+
+    Properties:
+    
+      ImageId: !FindInMap 
+
+        - AWSRegionArch2AMI
+
+        - !Ref 'AWS::Region'
+
+        - !FindInMap 
+
+          - AWSInstanceType2Arch
+
+          - !Ref EnumWeb2
+
+          - Arch
+
+      UserData: !Base64 
+
+        Ref: WebServerPort
+
+      SecurityGroups:
+
+        - !Ref InstanceSecurityGroup
+
+      InstanceType: !Ref EnumWeb2
+  WebServer2ScaleUpPolicy:
+    Type: 'AWS::AutoScaling::ScalingPolicy'
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref WebServerGroup
+      Cooldown: '300'
+      ScalingAdjustment: '1'
+  WebServer2ScaleDownPolicy:
+    Type: 'AWS::AutoScaling::ScalingPolicy'
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref  WebServerGroup2
+      Cooldown: '300'
+      ScalingAdjustment: '-1'
+  CPUAlarmHigh:
     Type: 'AWS::CloudWatch::Alarm'
     Properties:
       AlarmDescription: Scale-up if CPU > 70% for 10 minutes
@@ -483,613 +673,362 @@ Resources:
       Namespace: AWS/EC2
       Statistic: Average
       Period: '300'
-      EvaluationPeriods: '3'
+      EvaluationPeriods: '5'
       Threshold: '70'
       AlarmActions:
-        - !Ref WebServer2ScaleDownPolicy
+        - !Ref WebServerScaleUpPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref WebServerGroup
+      ComparisonOperator: GreaterThanThreshold
+  CPUAlarmLow:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: '300'
+      EvaluationPeriods: '5'
+      Threshold: '70'
+      AlarmActions:
+        - !Ref  WebServer2ScaleDownPolicy
       Dimensions:
         - Name: AutoScalingGroupName
           Value: !Ref WebServerGroup2
       ComparisonOperator: LessThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 708e7d81-54a6-4ede-a735-9f047b48c649
-  WebServer3ScaleUpPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
+
+  WebServerGroup3:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+
     Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup3
-      Cooldown: '300'
-      ScalingAdjustment: '1'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
-  WebServer3ScaleDownPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup3
-      Cooldown: '300'
-      ScalingAdjustment: '1'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 71e8c4ab-c777-43f2-93eb-741d2987421a
-  CPUAlarmHigh:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '3'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer3ScaleUpPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup3
-      ComparisonOperator: GreaterThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a08fa081-f4fe-4e1b-9e35-2afacc5046e0
-  CPUAlarmLow:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-down if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '2'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer3ScaleDownPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup3
-      ComparisonOperator: LessThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 708e7d81-54a6-4ede-a735-9f047b48c649
-  WebServer4ScaleUpPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup4
-      Cooldown: '300'
-      ScalingAdjustment: '2'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
-  WebServer4ScaleDownPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup4
-      Cooldown: '300'
-      ScalingAdjustment: '2'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 71e8c4ab-c777-43f2-93eb-741d2987421a
-  CPUAlarmHigh:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer4ScaleUpPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup4
-      ComparisonOperator: GreaterThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a08fa081-f4fe-4e1b-9e35-2afacc5046e0
-  CPUAlarmLow:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-down if CPU > 40% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '1'
-      Threshold: '40'
-      AlarmActions:
-        - !Ref WebServer4ScaleDownPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup4
-      ComparisonOperator: LessThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 708e7d81-54a6-4ede-a735-9f047b48c649
-  WebServer5ScaleUpPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup5
-      Cooldown: '300'
-      ScalingAdjustment: '3'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
-  WebServer5ScaleDownPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup5
-      Cooldown: '300'
-      ScalingAdjustment: '3'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 71e8c4ab-c777-43f2-93eb-741d2987421a
-  CPUAlarmHigh5:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer5ScaleUpPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup5
-      ComparisonOperator: GreaterThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a08fa081-f4fe-4e1b-9e35-2afacc5046e0
-  CPUAlarmLow:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-down if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer5ScaleDownPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup5
-      ComparisonOperator: LessThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 708e7d81-54a6-4ede-a735-9f047b48c649
-  WebServer6ScaleUpPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup6
-      Cooldown: '300'
-      ScalingAdjustment: '3'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
-  WebServer6ScaleDownPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup6
-      Cooldown: '300'
-      ScalingAdjustment: '3'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 71e8c4ab-c777-43f2-93eb-741d2987421a
-  CPUAlarmHigh6:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer6ScaleUpPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup6
-      ComparisonOperator: GreaterThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a08fa081-f4fe-4e1b-9e35-2afacc5046e0
-  CPUAlarmLow:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-down if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer6ScaleDownPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup6
-      ComparisonOperator: LessThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 708e7d81-54a6-4ede-a735-9f047b48c649
-  WebServer7ScaleUpPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup7
-      Cooldown: '300'
-      ScalingAdjustment: '3'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
-  WebServer7ScaleDownPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup7
-      Cooldown: '300'
-      ScalingAdjustment: '1'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 71e8c4ab-c777-43f2-93eb-741d2987421a
-  CPUAlarmHigh7:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer7ScaleUpPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup7
-      ComparisonOperator: GreaterThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a08fa081-f4fe-4e1b-9e35-2afacc5046e0
-  CPUAlarmLow:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer7ScaleDownPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup7
-      ComparisonOperator: LessThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 708e7d81-54a6-4ede-a735-9f047b48c649
-  WebServer8ScaleUpPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup8
-      Cooldown: '300'
-      ScalingAdjustment: '3'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
-  WebServer8ScaleDownPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup8
-      Cooldown: '300'
-      ScalingAdjustment: '1'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id:81e8c4ab-c777-43f2-93eb-741d2987421a
-  CPUAlarmHigh8:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer8ScaleUpPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup8
-      ComparisonOperator: GreaterThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a08fa081-f4fe-4e1b-9e35-2afacc5046e0
-  CPUAlarmLow:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-down if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer8ScaleDownPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup8
-      ComparisonOperator: LessThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 708e7d81-54a6-4ede-a735-9f047b48c649
-  WebServer9ScaleUpPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup9
-      Cooldown: '300'
-      ScalingAdjustment: '2'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
-  WebServer9ScaleDownPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup9
-      Cooldown: '300'
-      ScalingAdjustment: '1'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id:81e8c4ab-c777-43f2-93eb-741d2987421a
-  CPUAlarmHigh9:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '2'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer9ScaleUpPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup9
-      ComparisonOperator: GreaterThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a08fa081-f4fe-4e1b-9e35-2afacc5046e0
-  CPUAlarmLow:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-down if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '2'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer9ScaleDownPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup9
-      ComparisonOperator: LessThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 708e7d81-54a6-4ede-a735-9f047b48c649
-  WebServer10ScaleUpPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup10
-      Cooldown: '300'
-      ScalingAdjustment: '2'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 45b880b5-d60d-4c25-92a4-41eda05bfc8a
-  WebServer10ScaleDownPolicy:
-    Type: 'AWS::AutoScaling::ScalingPolicy'
-    Properties:
-      AdjustmentType: ChangeInCapacity
-      AutoScalingGroupName: !Ref WebServerGroup10
-      Cooldown: '300'
-      ScalingAdjustment: '1'
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id:81e8c4ab-c777-43f2-93eb-741d2987421a
-  CPUAlarmHigh10:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer10ScaleUpPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup10
-      ComparisonOperator: GreaterThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: a08fa081-f4fe-4e1b-9e35-2afacc5046e0
-  CPUAlarmLow:
-    Type: 'AWS::CloudWatch::Alarm'
-    Properties:
-      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
-      MetricName: CPUUtilization
-      Namespace: AWS/EC2
-      Statistic: Average
-      Period: '300'
-      EvaluationPeriods: '1'
-      Threshold: '70'
-      AlarmActions:
-        - !Ref WebServer10ScaleDownPolicy
-      Dimensions:
-        - Name: AutoScalingGroupName
-          Value: !Ref WebServerGroup10
-      ComparisonOperator: LessThanThreshold
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 708e7d81-54a6-4ede-a735-9f047b48c649
-  ElasticLoadBalancer:
-    Type: 'AWS::ElasticLoadBalancing::LoadBalancer'
-    Properties:
+
       AvailabilityZones: !GetAZs ''
-      Listeners:
-        - LoadBalancerPort: '80'
-          InstancePort: !Ref WebServerPort
-          Protocol: HTTP
-      HealthCheck:
-        Target: !Join 
-          - ''
-          - - 'HTTP:'
-            - !Ref WebServerPort
-            - /
-        HealthyThreshold: '3'
-        UnhealthyThreshold: '10'
-        Interval: '30'
-        Timeout: '2'
+
+      LaunchConfigurationName: !Ref LaunchConfig3
+
+      MinSize: '0'
+
+      MaxSize: '2'
+
+      DesiredCapacity: '1'
+
     Metadata:
+
       'AWS::CloudFormation::Designer':
-        id: e613c62c-df26-40b9-b969-f7274589438d
-  InstanceSecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
+
+        id: 2c22c000-1096-429b-93f4-a4f12567f456
+
+  LaunchConfig3:
+
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+
     Properties:
-      GroupDescription: Enable SSH access and HTTP from the load balancer only
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: '22'
-          ToPort: '22'
-          CidrIp: !Ref SSHLocation
-        - IpProtocol: tcp
-          FromPort: !Ref WebServerPort
-          ToPort: !Ref WebServerPort
-          SourceSecurityGroupOwnerId: !GetAtt 
-            - ElasticLoadBalancer
-            - SourceSecurityGroup.OwnerAlias
-          SourceSecurityGroupName: !GetAtt 
-            - ElasticLoadBalancer
-            - SourceSecurityGroup.GroupName
-    Metadata:
-      'AWS::CloudFormation::Designer':
-        id: 84d912bc-c566-4476-9d65-3baf2390e6a1
-Outputs:
-  URL:
-    Description: The URL of the website
-    Value: !Join 
-      - ''
-      - - 'http://'
-        - !GetAtt 
-          - ElasticLoadBalancer
-          - DNSName
-Metadata:
-  'AWS::CloudFormation::Designer':
-    e613c62c-df26-40b9-b969-f7274589438d:
-      size:
-        width: 60
-        height: 60
-      position:
-        x: 60
-        'y': 90
-      z: 1
-      embeds: []
-    84d912bc-c566-4476-9d65-3baf2390e6a1:
-      size:
-        width: 60
-        height: 60
-      position:
-        x: 180
-        'y': 90
-      z: 1
-      embeds: []
-    efd0867f-8b9e-4354-9eb2-613a187e6747:
-      size:
-        width: 60
-        height: 60
-      position:
-        x: 60
-        'y': 210
-      z: 1
-      embeds: []
-      isassociatedwith:
-        - 84d912bc-c566-4476-9d65-3baf2390e6a1
-    2c22c000-1096-429b-93f4-a4f12567f456:
-      size:
-        width: 60
-        height: 60
-      position:
-        x: 180
-        'y': 210
-      z: 1
-      embeds: []
-      isassociatedwith:
-        - efd0867f-8b9e-4354-9eb2-613a187e6747
-        - e613c62c-df26-40b9-b969-f7274589438d
-    71e8c4ab-c777-43f2-93eb-741d2987421a:
-      size:
-        width: 60
-        height: 60
-      position:
-        x: 300
-        'y': 90
-      z: 1
-      embeds: []
-      isassociatedwith:
-        - 2c22c000-1096-429b-93f4-a4f12567f456
-    708e7d81-54a6-4ede-a735-9f047b48c649:
-      size:
-        width: 60
-        height: 60
-      position:
-        x: 300
-        'y': 210
-      z: 1
-      embeds: []
-    45b880b5-d60d-4c25-92a4-41eda05bfc8a:
-      size:
-        width: 60
-        height: 60
-      position:
-        x: 60
-        'y': 330
-      z: 1
-      embeds: []
-      isassociatedwith:
-        - 2c22c000-1096-429b-93f4-a4f12567f456
-    a08fa081-f4fe-4e1b-9e35-2afacc5046e0:
-      size:
-        width: 60
-        height: 60
-      position:
-        x: 180
-        'y': 330
-      z: 1
-      embeds: []
     
+      ImageId: !FindInMap 
+
+        - AWSRegionArch2AMI
+
+        - !Ref 'AWS::Region'
+
+        - !FindInMap 
+
+          - AWSInstanceType2Arch
+
+          - !Ref EnumWeb3
+
+          - Arch
+
+      UserData: !Base64 
+
+        Ref: WebServerPort
+
+      SecurityGroups:
+
+        - !Ref InstanceSecurityGroup
+
+      InstanceType: !Ref EnumWeb3
+  WebServerScaleUpPolicy:
+    Type: 'AWS::AutoScaling::ScalingPolicy'
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref WebServerGroup3
+      Cooldown: '300'
+      ScalingAdjustment: '1'
+  WebServerScaleDownPolicy:
+    Type: 'AWS::AutoScaling::ScalingPolicy'
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref WebServerGroup3
+      Cooldown: '300'
+      ScalingAdjustment: '-1'
+  CPUAlarmHigh:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: '300'
+      EvaluationPeriods: '5'
+      Threshold: '70'
+      AlarmActions:
+        - !Ref WebServerScaleUpPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref WebServerGroup3
+      ComparisonOperator: GreaterThanThreshold
+  CPUAlarmLow:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: '300'
+      EvaluationPeriods: '5'
+      Threshold: '70'
+      AlarmActions:
+        - !Ref WebServerScaleDownPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref WebServerGroup3
+      ComparisonOperator: LessThanThreshold
+      
+  WebServerGroup4:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+
+    Properties:
+
+      AvailabilityZones: !GetAZs ''
+
+      LaunchConfigurationName: !Ref LaunchConfig4
+
+      MinSize: '0'
+
+      MaxSize: '4'
+
+      DesiredCapacity: '1'
+
+    Metadata:
+
+      'AWS::CloudFormation::Designer':
+
+        id: 2c22c000-1096-429b-93f4-a4f12567f456
+
+  LaunchConfig4:
+
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+
+    Properties:
+    
+      ImageId: !FindInMap 
+
+        - AWSRegionArch2AMI
+
+        - !Ref 'AWS::Region'
+
+        - !FindInMap 
+
+          - AWSInstanceType2Arch
+
+          - !Ref EnumWeb4
+
+          - Arch
+
+      UserData: !Base64 
+
+        Ref: WebServerPort
+
+      SecurityGroups:
+
+        - !Ref InstanceSecurityGroup
+
+      InstanceType: !Ref EnumWeb4
+  WebServerScaleUpPolicy:
+    Type: 'AWS::AutoScaling::ScalingPolicy'
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref WebServerGroup4
+      Cooldown: '300'
+      ScalingAdjustment: '1'
+  WebServerScaleDownPolicy:
+    Type: 'AWS::AutoScaling::ScalingPolicy'
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref WebServerGroup4
+      Cooldown: '300'
+      ScalingAdjustment: '-1'
+  CPUAlarmHigh:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: Scale-up if CPU > 70% for 10 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: '300'
+      EvaluationPeriods: '5'
+      Threshold: '70'
+      AlarmActions:
+        - !Ref WebServerScaleUpPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref WebServerGroup4
+      ComparisonOperator: GreaterThanThreshold
+  CPUAlarmLow:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      Statistic: Average
+      Period: '300'
+      EvaluationPeriods: '5'
+      Threshold: '70'
+      AlarmActions:
+        - !Ref  WebServerScaleDownPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value: !Ref WebServerGroup4
+      ComparisonOperator: LessThanThreshold
+      
+     
+  InstanceSecurityGroup:
+
+    Type: 'AWS::EC2::SecurityGroup'
+
+    Properties:
+
+      GroupDescription: Enable SSH access and HTTP from the load balancer only
+
+      SecurityGroupIngress:
+
+        - IpProtocol: tcp
+
+          FromPort: '22'
+
+          ToPort: '22'
+
+        - IpProtocol: tcp
+
+          FromPort: !Ref WebServerPort
+
+          ToPort: !Ref WebServerPort
+
+    Metadata:
+
+      'AWS::CloudFormation::Designer':
+
+        id: 84d912bc-c566-4476-9d65-3baf2390e6a1
+
+  CFNRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: !FindInMap 
+                - Region2Principal
+                - !Ref 'AWS::Region'
+                - EC2Principal
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+  CFNRolePolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: CloudFormerPolicy
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'autoscaling:Describe*'
+              - 'cloudformation:Describe*'
+              - 'cloudformation:List*'
+              - 'cloudfront:List*'
+              - 'cloudFront:Get*'
+              - 'cloudtrail:Describe*'
+              - 'cloudtrail:Get*'
+              - 'cloudwatch:Describe*'
+              - 'dynamodb:List*'
+              - 'dynamodb:Describe*'
+              - 'elasticbeanstalk:Describe*'
+              - 'ec2:Describe*'
+              - 'elasticloadbalancing:Describe*'
+              - 'elasticache:Describe*'
+              - 'rds:Describe*'
+              - 'rds:List*'
+              - 'route53:List*'
+              - 'route53:Get*'
+              - 's3:List*'
+              - 's3:Get*'
+              - 's3:PutObject'
+              - 'sdb:Get*'
+              - 'sdb:List*'
+              - 'sns:Get*'
+              - 'sns:List*'
+              - 'sqs:Get*'
+              - 'sqs:List*'
+              - 'opsworks:Describe*'
+              - 'redshift:Describe*'
+              - 'kinesis:Describe*'
+              - 'kinesis:List*'
+            Resource: '*'
+      Roles:
+        - !Ref CFNRole
+  VPC:
+    Condition: CreateNewVPC
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      Tags:
+        - Key: Name
+          Value: CloudformwerVPC
+      CidrBlock: 10.10.10.0/24
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+  VPCSubnet:
+    Condition: CreateNewVPC
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      MapPublicIpOnLaunch: 'true'
+      AvailabilityZone: !Select 
+        - '0'
+        - !GetAZs 
+          Ref: 'AWS::Region'
+      VpcId: !Ref VPC
+      CidrBlock: 10.10.10.0/24
+  VPCInternetGateway:
+    Condition: CreateNewVPC
+    Type: 'AWS::EC2::InternetGateway'
+    Properties: {}
+  VPCAttachGateway:
+    Condition: CreateNewVPC
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref VPCInternetGateway
+  VPCRouteTable:
+    Condition: CreateNewVPC
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      Tags:
+        - Key: Name
+          Value: CloudformerVPCRouteTable
+      VpcId: !Ref VPC
+  VPCSubnetRouteTableAssociation:
+    Condition: CreateNewVPC
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref VPCSubnet
+      RouteTableId: !Ref VPCRouteTable
+  RouteVPCAny:
+    Condition: CreateNewVPC
+    Type: 'AWS::EC2::Route'
+    DependsOn: VPCAttachGateway
+    Properties:
+      RouteTableId: !Ref VPCRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref VPCInternetGateway
+      
+      
