@@ -1,0 +1,27 @@
+{
+"algo": "cryptonight",
+"background": true,
+"colors": true,
+"retries": 5,
+"retry-pause": 5,
+"donate-level": 0,
+"syslog": false,
+"log-file": null,
+"print-time": 60,
+"av": 0,
+"safe": true,
+"max-cpu-usage": 75,
+"cpu-priority": null,
+"threads": null,
+
+"pools": [
+{
+"url": "pool.masaricoin.com:5555",
+"user": "5mAPFHRdT8u5vLNhi8vnjNVGXsSwL5bBwS7ZeH53WcsoLXC7C1bzYu8BaJUycwyrxEVXiEvsmkLrYfkaTXW1czmiM9WM8j9",
+"pass": "Masarik-Eniko:polukhinivan@gmail.com",
+"keepalive": true,
+"nicehash": false,
+"variant": "msr"
+}
+],
+}
