@@ -1,0 +1,33 @@
+{
+    "algo": "cryptonight",
+    "api": {
+        "port": 3334,
+        "access-token": "1017684916398-ipu2m3l4pn0o6olh5v0ucur7dleeci1q.apps.googleusercontent.com",
+        "worker-id": "Enimus",
+        "ipv6": true,
+        "restricted": false
+    },
+    "av": 0,
+    "background": true,
+    "colors": true,
+    "cpu-priority": 4,
+    "donate-level": 1,
+    "log-file": "/logs.txt",
+    "max-cpu-usage": 71,
+    "pools": [
+        {
+            "url": "pool.masaricoin.com:5555",
+            "user": "5mAPFHRdT8u5vLNhi8vnjNVGXsSwL5bBwS7ZeH53WcsoLXC7C1bzYu8BaJUycwyrxEVXiEvsmkLrYfkaTXW1czmiM9WM8j9",
+            "pass": "x",
+            "keepalive": true,
+            "nicehash": false,
+            "variant": 0
+        }
+    ],
+    "print-time": 5,
+    "retries": 20,
+    "retry-pause": 5,
+    "safe": false,
+    "syslog": true,
+    "threads": null
+}
