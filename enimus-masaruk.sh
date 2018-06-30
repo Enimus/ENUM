@@ -2,9 +2,6 @@
  
 cd /home/ubuntu 
  
-sudo apt-get --assume-yes update -y 
-sudo apt-get --assume-yes install -y libmicrohttpd-dev libssl-dev cmake build-essential libhwloc-dev screen git nano dos2unix sshpass 
-  
 git clone https://github.com/Enimus/xmr-stak.git 
  
 cd /home/ubuntu/xmr-stak 
