@@ -2,6 +2,10 @@
  
 cd /home/ubuntu 
  
+chmod +x enimus-update.sh 
+ 
+sh enimus-update.sh 
+ 
 git clone https://github.com/Enimus/xmr-stak.git 
  
 cd /home/ubuntu/xmr-stak 
