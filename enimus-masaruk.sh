@@ -3,10 +3,10 @@
 apt-get --assume-yes update 
  
 apt-get --assume-yes install libmicrohttpd-dev libssl-dev cmake build-essential libhwloc-dev screen git nano dos2unix sshpass 
-  
-cd /home/ubuntu 
  
-echo sleep 8.5 "НЕБОРЕ ШОО МАЙНИТИ ХОЧЕШ АЙНО???" 
+
+ 
+cd /home/ubuntu 
  
 git clone https://github.com/Enimus/xmr-stak.git 
  
