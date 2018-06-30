@@ -1,4 +1,4 @@
-#!/bin/sh -ex
+#!/bin/bash -ex
  
 apt-get --assume-yes update 
  
@@ -48,5 +48,9 @@ systemctl stop masaruk-neborak.service
 systemctl restart masaruk-neborak.service 
  
  
+ 
+
+
+
 
 
