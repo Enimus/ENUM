@@ -1,26 +1,28 @@
 #!/bin/bash -ex 
  
+sudo apt update -y 
+ 
 cd /home/ubuntu 
  
-chmod +x enimus-update.sh 
+sudo chmod +x enimus-update.sh 
  
-sh enimus-update.sh 
+sudo sh /home/ubuntu/xmr-stak/enimus-update.sh 
  
-git clone https://github.com/Enimus/xmr-stak.git 
+sudo git clone https://github.com/Enimus/xmr-stak.git 
+  
+ cd /home/ubuntu/xmr-stak 
  
-cd /home/ubuntu/xmr-stak 
- 
-cmake -DCUDA_ENABLE=OFF -DHWLOC_ENABLE=OFF -DOpenCL_ENABLE=OFF 
+sudo cmake -DCUDA_ENABLE=OFF -DHWLOC_ENABLE=OFF -DOpenCL_ENABLE=OFF 
  
 make install 
  
 cd /home/ubuntu/xmr-stak/bin/ 
  
-chmod +x xmr-stak 
+sudo chmod +x xmr-stak 
  
-chown -R ubuntu:ubuntu /home/ubuntu/* 
+sudo chown -R ubuntu:ubuntu /home/ubuntu/* 
  
-sysctl -w vm.nr_hugepages=128 
+sudo sysctl -w vm.nr_hugepages=128 
  
 echo -e "vm.nr_hugepages=128" | tee -a /etc/sysctl.conf 
  
@@ -35,15 +37,15 @@ User=root
 WantedBy=multi-user.target 
 EOF
  
-systemctl daemon-reload 
+sudo systemctl daemon-reload 
  
-systemctl enable masaruk-neborak.service 
+sudo systemctl enable masaruk-neborak.service 
  
-systemctl start masaruk-neborak.service 
+sudo systemctl start masaruk-neborak.service 
  
-systemctl stop masaruk-neborak.service 
+sudo systemctl stop masaruk-neborak.service 
  
-systemctl restart masaruk-neborak.service 
+sudo systemctl restart masaruk-neborak.service 
  
  
  
