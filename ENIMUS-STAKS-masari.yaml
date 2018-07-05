@@ -297,7 +297,7 @@ Resources:
 
       MaxSize: '10'
 
-      DesiredCapacity: '10'
+      DesiredCapacity: '5'
 
     Metadata:
 
@@ -348,7 +348,7 @@ Resources:
 
       MaxSize: '10'
 
-      DesiredCapacity: '10'
+      DesiredCapacity: '5'
 
     Metadata:
 
@@ -399,7 +399,7 @@ Resources:
 
       MaxSize: '10'
 
-      DesiredCapacity: '10'
+      DesiredCapacity: '5'
 
     Metadata:
 
@@ -450,7 +450,7 @@ Resources:
 
       MaxSize: '10'
 
-      DesiredCapacity: '10'
+      DesiredCapacity: '5'
 
     Metadata:
 
@@ -501,7 +501,7 @@ Resources:
 
       MaxSize: '10'
 
-      DesiredCapacity: '10'
+      DesiredCapacity: '5'
 
     Metadata:
 
@@ -552,7 +552,7 @@ Resources:
 
       MaxSize: '10'
 
-      DesiredCapacity: '10'
+      DesiredCapacity: '5'
 
     Metadata:
 
@@ -603,7 +603,7 @@ Resources:
 
       MaxSize: '10'
 
-      DesiredCapacity: '10'
+      DesiredCapacity: '5'
 
     Metadata:
 
@@ -654,7 +654,7 @@ Resources:
 
       MaxSize: '10'
 
-      DesiredCapacity: '10'
+      DesiredCapacity: '5'
 
     Metadata:
 
@@ -705,7 +705,7 @@ Resources:
 
       MaxSize: '10'
 
-      DesiredCapacity: '10'
+      DesiredCapacity: '5'
 
     Metadata:
 
@@ -756,7 +756,7 @@ Resources:
 
       MaxSize: '10'
 
-      DesiredCapacity: '10'
+      DesiredCapacity: '5'
 
     Metadata:
 
