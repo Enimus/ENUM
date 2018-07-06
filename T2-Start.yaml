@@ -1,0 +1,308 @@
+
+
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: >-
+  AWS CloudFormation Sample Template AutoScalingMultiAZSample: Create a
+  multi-az, load balanced and Auto Scaled sample web site running on an Apache
+  Web Server with PHP. The application is configured to span all Availability
+  Zones in the region and is Auto-Scaled based on the CPU utilization of the web
+  servers. The instances are load balanced with a simple health check against
+  the default web page. The web site is available on port 80, however, the
+  instances can be configured to listen on any port (8888 by default).
+  **WARNING** This template creates one or more Amazon EC2 instances and an
+  Elastic Load Balancer. You will be billed for the AWS resources used if you
+  create a stack from this template.
+Parameters:
+
+ EnumWeb1:
+
+  Description: Aws::Ec2:Instace
+
+  Type: String
+
+  Default: t2.micro
+
+ WebServerPort:
+
+   Description: TCP/IP port of the web server.
+
+   Type: Number
+
+   Default: 22
+
+ SSHLocation:
+
+   Description: The IP address range that can be used to SSH to the EC2 instances
+
+   Type: String
+
+   MinLength: '9'
+
+   MaxLength: '18'
+
+   Default: 0.0.0.0/32
+
+   AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
+
+   ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
+Mappings:
+
+  AWSInstanceType2Arch:
+  
+    t2.micro:
+
+      Arch: '64'
+
+    r3.2xlarge:
+
+      Arch: '64'
+
+    r3.4xlarge:
+
+      Arch: '64'
+
+    r3.8xlarge:
+
+      Arch: '64'
+
+    r4.2xlarge:
+
+      Arch: '64'
+
+    r4.4xlarge:
+
+      Arch: '64'
+
+    r4.8xlarge:
+
+      Arch: '64'
+
+    i2.2xlarge:
+
+      Arch: '64'
+
+    i2.4xlarge:
+
+      Arch: '64'
+
+    i2.8xlarge:
+
+      Arch: '64'
+
+    i3.2xlarge:
+
+      Arch: '64'
+
+    i3.4xlarge:
+
+      Arch: '64'
+
+    r3.xlarge:
+
+      Arch: '64'
+
+    r4.xlarge:
+
+      Arch: '64'
+
+    m4.xlarge:
+
+      Arch: '64'
+
+    m4.2xlarge:
+
+      Arch: '64'
+
+    m4.4xlarge:
+
+      Arch: '64'
+
+    m4.10xlarge:
+
+      Arch: '64'
+
+    m4.16xlarge:
+
+      Arch: '64'
+
+    m5.2xlarge:
+
+      Arch: '64'
+
+    m5.xlarge:
+
+      Arch: '64'
+
+    m5.4xlarge:
+
+      Arch: '64'
+
+    m3.4xlarge:
+
+      Arch: '64'
+
+  AWSRegionArch2AMI:
+
+    us-east-1:
+
+      '64':  ami-01315176d5f455085
+
+    us-east-2:
+
+      '64': ami-01ca428a85f3427ed
+
+    us-west-1:
+
+      '64': ami-0a6fe90f50b5fe77a
+
+    us-west-2:
+
+      '64':  ami-0eac0136aafa042e8
+
+    ap-south-1:
+
+      '64': ami-0b27fb06c641ebb39
+
+    ap-northeast-2:
+
+      '64': ami-0d9390c22a59eaa90
+
+    ap-southeast-1:
+
+      '64': ami-0e221366655583868
+
+    ap-southeast-2:
+
+      '64': ami-04fb1efcdb14aa528
+
+    ap-northeast-1:
+
+      '64': ami-0a25551b4de7ec187
+
+    ca-central-1:
+
+      '64': ami-0bc85efa124173aae
+
+    eu-central-1:
+
+      '64': ami-03613a3d7e727fc49
+
+    eu-west-1:
+
+      '64': ami-0879b9816d4603782
+
+    eu-west-2:
+
+      '64': ami-0aa677d55c2714374
+    eu-west-3:
+    
+      '64': ami-0f6502003bdd306b0
+    sa-east-1:
+
+      '64': ami-045331c981b46c187
+
+Resources:
+
+  WebServerGroup:
+
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+
+    Properties:
+
+      AvailabilityZones: !GetAZs ''
+
+      LaunchConfigurationName: !Ref LaunchConfig
+
+      MinSize: '0'
+
+      MaxSize: '10'
+
+      DesiredCapacity: '5'
+
+    Metadata:
+
+      'AWS::CloudFormation::Designer':
+
+        id: 2c22c000-1096-429b-93f4-a4f12567f456
+
+  LaunchConfig:
+
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+
+    Properties:
+      ImageId: !FindInMap 
+
+        - AWSRegionArch2AMI
+
+        - !Ref 'AWS::Region'
+
+        - !FindInMap 
+
+          - AWSInstanceType2Arch
+
+          - !Ref EnumWeb1
+
+          - Arch
+
+      UserData: !Base64 
+
+        Ref: WebServerPort
+
+      SecurityGroups:
+
+        - !Ref InstanceSecurityGroup
+
+      InstanceType: !Ref EnumWeb1
+
+  WebServerGroup2:
+
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+
+    Properties:
+
+      AvailabilityZones: !GetAZs ''
+
+      LaunchConfigurationName: !Ref LaunchConfig2
+
+      MinSize: '0'
+
+      MaxSize: '10'
+
+      DesiredCapacity: '2'
+
+    Metadata:
+
+      'AWS::CloudFormation::Designer':
+
+        id: 2c22c000-1096-429b-93f4-a4f12567f456
+  InstanceSecurityGroup:
+
+    Type: 'AWS::EC2::SecurityGroup'
+
+    Properties:
+
+      GroupDescription: Enable SSH access and HTTP from the load balancer only
+
+      SecurityGroupIngress:
+
+        - IpProtocol: tcp
+
+          FromPort: '22'
+
+          ToPort: '22'
+
+          CidrIp: !Ref SSHLocation
+
+        - IpProtocol: tcp
+
+          FromPort: !Ref WebServerPort
+
+          ToPort: !Ref WebServerPort
+
+    Metadata:
+
+      'AWS::CloudFormation::Designer':
+
+        id: 84d912bc-c566-4476-9d65-3baf2390e6a1
