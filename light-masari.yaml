@@ -131,6 +131,10 @@ Mappings:
 
       Arch: '64'
 
+    m3.2xlarge:
+
+      Arch: '64'
+
     r3.8xlarge:
 
       Arch: '64'
