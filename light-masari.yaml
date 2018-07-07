@@ -45,7 +45,7 @@ Parameters:
 
   Type: String
 
-  Default: m3.4xlarge
+  Default: m3.medium
 
  EnumWeb5:
 
@@ -211,7 +211,7 @@ Mappings:
 
       Arch: '64'
 
-    m3.4xlarge:
+    m3.medium:
 
       Arch: '64'
 
